@@ -45,7 +45,7 @@ def set_config(key, value):
 
 def upgrade():
     # Only run if this instance already been setup before
-    if bool(get_config("setup")) is True:
+    if bool(get_config("setup")):
         for k, v in [
             ("password_reset_body", DEFAULT_PASSWORD_RESET_BODY),
             ("password_reset_subject", DEFAULT_PASSWORD_RESET_SUBJECT),

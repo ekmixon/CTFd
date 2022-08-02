@@ -204,8 +204,8 @@ def test_dynamic_challenge_loses_value_properly():
         gen_flag(app.db, challenge_id=1, content="flag")
 
         for i, team_id in enumerate(range(2, 26)):
-            name = "user{}".format(team_id)
-            email = "user{}@examplectf.com".format(team_id)
+            name = f"user{team_id}"
+            email = f"user{team_id}@examplectf.com"
             # We need to bypass rate-limiting so gen_user instead of register_user
             user = gen_user(app.db, name=name, email=email)
             user_id = user.id
@@ -293,9 +293,9 @@ def test_dynamic_challenge_value_isnt_affected_by_hidden_users():
         assert resp["status"] == "correct"
 
         # Make solves as hidden users. Also should not affect value
-        for _, team_id in enumerate(range(2, 26)):
-            name = "user{}".format(team_id)
-            email = "user{}@examplectf.com".format(team_id)
+        for team_id in range(2, 26):
+            name = f"user{team_id}"
+            email = f"user{team_id}@examplectf.com"
             # We need to bypass rate-limiting so gen_user instead of register_user
             user = gen_user(app.db, name=name, email=email)
             user.hidden = True

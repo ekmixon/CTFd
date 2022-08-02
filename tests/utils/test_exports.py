@@ -60,17 +60,17 @@ def test_import_ctf():
             base_user = "user"
             for x in range(10):
                 user = base_user + str(x)
-                user_email = user + "@examplectf.com"
+                user_email = f"{user}@examplectf.com"
                 gen_user(app.db, name=user, email=user_email)
 
             base_team = "team"
             for x in range(5):
                 team = base_team + str(x)
-                team_email = team + "@examplectf.com"
+                team_email = f"{team}@examplectf.com"
                 gen_team(app.db, name=team, email=team_email)
 
             for x in range(9):
-                chal = gen_challenge(app.db, name="chal_name{}".format(x))
+                chal = gen_challenge(app.db, name=f"chal_name{x}")
                 gen_flag(app.db, challenge_id=chal.id, content="flag")
 
             chal = gen_challenge(

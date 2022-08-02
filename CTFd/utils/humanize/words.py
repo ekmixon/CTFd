@@ -1,5 +1,2 @@
 def pluralize(number, singular="", plural="s"):
-    if number == 1:
-        return singular
-    else:
-        return plural
+    return singular if number == 1 else plural

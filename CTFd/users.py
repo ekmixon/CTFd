@@ -23,7 +23,7 @@ def listing():
 
     filters = []
     if q:
-        filters.append(getattr(Users, field).like("%{}%".format(q)))
+        filters.append(getattr(Users, field).like(f"%{q}%"))
 
     users = (
         Users.query.filter_by(banned=False, hidden=False)

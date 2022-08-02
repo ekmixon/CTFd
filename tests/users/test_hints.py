@@ -35,7 +35,7 @@ def test_user_cannot_unlock_hint():
             client = login_as_user(app, name="user1", password="password")
 
             with client.session_transaction():
-                r = client.get("/api/v1/hints/{}".format(hint_id))
+                r = client.get(f"/api/v1/hints/{hint_id}")
                 resp = r.get_json()
                 assert resp["data"].get("content") is None
                 assert resp["data"].get("cost") == 10
@@ -65,7 +65,7 @@ def test_user_can_unlock_hint():
             assert user.score == 15
 
             with client.session_transaction():
-                r = client.get("/api/v1/hints/{}".format(hint_id))
+                r = client.get(f"/api/v1/hints/{hint_id}")
                 resp = r.get_json()
                 assert resp["data"].get("content") is None
 
@@ -75,7 +75,7 @@ def test_user_can_unlock_hint():
                 resp = r.get_json()
                 assert resp["success"] is True
 
-                r = client.get("/api/v1/hints/{}".format(hint_id))
+                r = client.get(f"/api/v1/hints/{hint_id}")
                 resp = r.get_json()
                 assert resp["data"].get("content") == "This is a hint"
 

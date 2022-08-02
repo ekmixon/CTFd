@@ -80,9 +80,8 @@ def plugin(plugin):
         abort(404)
     elif request.method == "POST":
         for k, v in request.form.items():
-            if k == "nonce":
-                continue
-            set_config(k, v)
+            if k != "nonce":
+                set_config(k, v)
         with app.app_context():
             clear_config()
         return "1"
@@ -99,10 +98,7 @@ def import_ctf():
         print(e)
         errors.append(repr(e))
 
-    if errors:
-        return errors[0], 500
-    else:
-        return redirect(url_for("admin.config"))
+    return (errors[0], 500) if errors else redirect(url_for("admin.config"))
 
 
 @admin.route("/admin/export", methods=["GET", "POST"])
@@ -111,7 +107,7 @@ def export_ctf():
     backup = export_ctf_util()
     ctf_name = ctf_config.ctf_name()
     day = datetime.datetime.now().strftime("%Y-%m-%d_%T")
-    full_name = u"{}.{}.zip".format(ctf_name, day)
+    full_name = f"{ctf_name}.{day}.zip"
     return send_file(
         backup, cache_timeout=-1, as_attachment=True, attachment_filename=full_name
     )
@@ -182,61 +178,60 @@ def config():
 @admin.route("/admin/reset", methods=["GET", "POST"])
 @admins_only
 def reset():
-    if request.method == "POST":
-        require_setup = False
-        logout = False
-        next_url = url_for("admin.statistics")
+    if request.method != "POST":
+        return render_template("admin/reset.html")
+    require_setup = False
+    logout = False
+    next_url = url_for("admin.statistics")
 
-        data = request.form
+    data = request.form
 
-        if data.get("pages"):
-            _pages = Pages.query.all()
-            for p in _pages:
-                for f in p.files:
-                    delete_file(file_id=f.id)
+    if data.get("pages"):
+        _pages = Pages.query.all()
+        for p in _pages:
+            for f in p.files:
+                delete_file(file_id=f.id)
 
-            Pages.query.delete()
+        Pages.query.delete()
 
-        if data.get("notifications"):
-            Notifications.query.delete()
+    if data.get("notifications"):
+        Notifications.query.delete()
 
-        if data.get("challenges"):
-            _challenges = Challenges.query.all()
-            for c in _challenges:
-                for f in c.files:
-                    delete_file(file_id=f.id)
-            Challenges.query.delete()
+    if data.get("challenges"):
+        _challenges = Challenges.query.all()
+        for c in _challenges:
+            for f in c.files:
+                delete_file(file_id=f.id)
+        Challenges.query.delete()
 
-        if data.get("accounts"):
-            Users.query.delete()
-            Teams.query.delete()
-            require_setup = True
-            logout = True
+    if data.get("accounts"):
+        Users.query.delete()
+        Teams.query.delete()
+        require_setup = True
+        logout = True
 
-        if data.get("submissions"):
-            Solves.query.delete()
-            Submissions.query.delete()
-            Awards.query.delete()
-            Unlocks.query.delete()
-            Tracking.query.delete()
+    if data.get("submissions"):
+        Solves.query.delete()
+        Submissions.query.delete()
+        Awards.query.delete()
+        Unlocks.query.delete()
+        Tracking.query.delete()
 
-        if require_setup:
-            set_config("setup", False)
-            cache.clear()
-            logout_user()
-            next_url = url_for("views.setup")
+    if require_setup:
+        set_config("setup", False)
+        cache.clear()
+        logout_user()
+        next_url = url_for("views.setup")
 
-        db.session.commit()
+    db.session.commit()
 
-        clear_pages()
-        clear_standings()
-        clear_config()
+    clear_pages()
+    clear_standings()
+    clear_config()
 
-        if logout is True:
-            cache.clear()
-            logout_user()
+    if logout:
+        cache.clear()
+        logout_user()
 
-        db.session.close()
-        return redirect(next_url)
-
-    return render_template("admin/reset.html")
+    db.session.close()
+    return redirect(next_url)

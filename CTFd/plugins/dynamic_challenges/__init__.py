@@ -94,7 +94,7 @@ class DynamicValueChallenge(BaseChallenge):
         :return: Challenge object, data dictionary to be returned to the user
         """
         challenge = DynamicChallenge.query.filter_by(id=challenge.id).first()
-        data = {
+        return {
             "id": challenge.id,
             "name": challenge.name,
             "value": challenge.value,
@@ -114,7 +114,6 @@ class DynamicValueChallenge(BaseChallenge):
                 "scripts": cls.scripts,
             },
         }
-        return data
 
     @classmethod
     def update(cls, challenge, request):

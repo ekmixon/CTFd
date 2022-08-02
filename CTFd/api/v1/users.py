@@ -333,7 +333,7 @@ class UserPrivateSolves(Resource):
         user = get_current_user()
         solves = user.get_solves(admin=True)
 
-        view = "user" if not is_admin() else "admin"
+        view = "admin" if is_admin() else "user"
         response = SubmissionSchema(view=view, many=True).dump(solves)
 
         if response.errors:
@@ -349,15 +349,12 @@ class UserPrivateFails(Resource):
         user = get_current_user()
         fails = user.get_fails(admin=True)
 
-        view = "user" if not is_admin() else "admin"
+        view = "admin" if is_admin() else "user"
         response = SubmissionSchema(view=view, many=True).dump(fails)
         if response.errors:
             return {"success": False, "errors": response.errors}, 400
 
-        if is_admin():
-            data = response.data
-        else:
-            data = []
+        data = response.data if is_admin() else []
         count = len(response.data)
 
         return {"success": True, "data": data, "meta": {"count": count}}
@@ -371,7 +368,7 @@ class UserPrivateAwards(Resource):
         user = get_current_user()
         awards = user.get_awards(admin=True)
 
-        view = "user" if not is_admin() else "admin"
+        view = "admin" if is_admin() else "user"
         response = AwardSchema(view=view, many=True).dump(awards)
 
         if response.errors:
@@ -393,7 +390,7 @@ class UserPublicSolves(Resource):
 
         solves = user.get_solves(admin=is_admin())
 
-        view = "user" if not is_admin() else "admin"
+        view = "admin" if is_admin() else "user"
         response = SubmissionSchema(view=view, many=True).dump(solves)
 
         if response.errors:
@@ -414,15 +411,12 @@ class UserPublicFails(Resource):
             abort(404)
         fails = user.get_fails(admin=is_admin())
 
-        view = "user" if not is_admin() else "admin"
+        view = "admin" if is_admin() else "user"
         response = SubmissionSchema(view=view, many=True).dump(fails)
         if response.errors:
             return {"success": False, "errors": response.errors}, 400
 
-        if is_admin():
-            data = response.data
-        else:
-            data = []
+        data = response.data if is_admin() else []
         count = len(response.data)
 
         return {"success": True, "data": data, "meta": {"count": count}}
@@ -440,7 +434,7 @@ class UserPublicAwards(Resource):
             abort(404)
         awards = user.get_awards(admin=is_admin())
 
-        view = "user" if not is_admin() else "admin"
+        view = "admin" if is_admin() else "user"
         response = AwardSchema(view=view, many=True).dump(awards)
 
         if response.errors:

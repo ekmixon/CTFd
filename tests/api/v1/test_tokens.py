@@ -96,7 +96,7 @@ def test_api_token_delete():
         token = generate_user_token(user)
         token_id = token.id
         with login_as_user(app, username) as client:
-            r = client.delete("/api/v1/tokens/" + str(token_id), json="")
+            r = client.delete(f"/api/v1/tokens/{str(token_id)}", json="")
             assert r.status_code == 200
             assert Tokens.query.count() == 0
 
@@ -105,7 +105,7 @@ def test_api_token_delete():
         token = generate_user_token(user)
         token_id = token.id
         with login_as_user(app, "admin") as client:
-            r = client.delete("/api/v1/tokens/" + str(token_id), json="")
+            r = client.delete(f"/api/v1/tokens/{str(token_id)}", json="")
             assert r.status_code == 200
             assert Tokens.query.count() == 0
 
@@ -117,7 +117,7 @@ def test_api_token_delete():
         second_user = gen_user(app.db, name="user2", email="user2@examplectf.com")
         username2 = second_user.name
         with login_as_user(app, username2) as client:
-            r = client.delete("/api/v1/tokens/" + str(token_id), json="")
+            r = client.delete(f"/api/v1/tokens/{str(token_id)}", json="")
             assert r.status_code == 404
             assert Tokens.query.count() == 1
     destroy_ctfd(app)

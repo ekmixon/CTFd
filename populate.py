@@ -90,7 +90,7 @@ def gen_category():
 
 
 def gen_affiliation():
-    return (fake.word() + " " + random.choice(companies)).title()
+    return f"{fake.word()} {random.choice(companies)}".title()
 
 
 def gen_value():

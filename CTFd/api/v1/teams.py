@@ -425,10 +425,7 @@ class TeamMembers(Resource):
         data = request.get_json()
         user_id = data.get("user_id")
         user = Users.query.filter_by(id=user_id).first_or_404()
-        if user.team_id is None:
-            team.members.append(user)
-            db.session.commit()
-        else:
+        if user.team_id is not None:
             return (
                 {
                     "success": False,
@@ -437,6 +434,8 @@ class TeamMembers(Resource):
                 400,
             )
 
+        team.members.append(user)
+        db.session.commit()
         view = "admin" if is_admin() else "user"
         schema = TeamSchema(view=view)
         response = schema.dump(team)
@@ -517,10 +516,7 @@ class TeamPrivateFails(Resource):
         if response.errors:
             return {"success": False, "errors": response.errors}, 400
 
-        if is_admin():
-            data = response.data
-        else:
-            data = []
+        data = response.data if is_admin() else []
         count = len(response.data)
 
         return {"success": True, "data": data, "meta": {"count": count}}
@@ -585,10 +581,7 @@ class TeamPublicFails(Resource):
         if response.errors:
             return {"success": False, "errors": response.errors}, 400
 
-        if is_admin():
-            data = response.data
-        else:
-            data = []
+        data = response.data if is_admin() else []
         count = len(response.data)
 
         return {"success": True, "data": data, "meta": {"count": count}}

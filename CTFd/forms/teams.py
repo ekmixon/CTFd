@@ -94,6 +94,9 @@ def TeamRegisterForm(*args, **kwargs):
 
 
 def TeamSettingsForm(*args, **kwargs):
+
+
+
     class _TeamSettingsForm(BaseForm):
         name = StringField(
             "Team Name",
@@ -144,9 +147,9 @@ def TeamSettingsForm(*args, **kwargs):
             Custom init to persist the obj parameter to the rest of the form
             """
             super().__init__(*args, **kwargs)
-            obj = kwargs.get("obj")
-            if obj:
+            if obj := kwargs.get("obj"):
                 self.obj = obj
+
 
     field_kwargs = _TeamSettingsForm.get_field_kwargs()
     attach_custom_team_fields(_TeamSettingsForm, **field_kwargs)
@@ -217,6 +220,9 @@ def TeamCreateForm(*args, **kwargs):
 
 
 def TeamEditForm(*args, **kwargs):
+
+
+
     class _TeamEditForm(TeamBaseForm):
         pass
 
@@ -234,9 +240,9 @@ def TeamEditForm(*args, **kwargs):
             Custom init to persist the obj parameter to the rest of the form
             """
             super().__init__(*args, **kwargs)
-            obj = kwargs.get("obj")
-            if obj:
+            if obj := kwargs.get("obj"):
                 self.obj = obj
+
 
     attach_custom_team_fields(_TeamEditForm)
 

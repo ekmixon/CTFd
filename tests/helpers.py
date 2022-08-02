@@ -88,8 +88,7 @@ class ctftime:
         """
         try:
             freezer = freeze_time(FreezeTimes.NOT_STARTED)
-            frozen_time = freezer.start()
-            yield frozen_time
+            yield freezer.start()
         finally:
             freezer.stop()
 
@@ -100,8 +99,7 @@ class ctftime:
         """
         try:
             freezer = freeze_time(FreezeTimes.STARTED)
-            frozen_time = freezer.start()
-            yield frozen_time
+            yield freezer.start()
         finally:
             freezer.stop()
 
@@ -112,8 +110,7 @@ class ctftime:
         """
         try:
             freezer = freeze_time(FreezeTimes.ENDED)
-            frozen_time = freezer.start()
-            yield frozen_time
+            yield freezer.start()
         finally:
             freezer.stop()
 
@@ -130,11 +127,7 @@ def create_ctfd(
     application_root="/",
     config=TestingConfig,
 ):
-    if enable_plugins:
-        config.SAFE_MODE = False
-    else:
-        config.SAFE_MODE = True
-
+    config.SAFE_MODE = not enable_plugins
     config.APPLICATION_ROOT = application_root
     url = make_url(config.SQLALCHEMY_DATABASE_URI)
     if url.database:
@@ -406,8 +399,8 @@ def gen_team(
 ):
     team = Teams(name=name, email=email, password=password, **kwargs)
     for i in range(member_count):
-        name = "user-{}-{}".format(random_string(), str(i))
-        user = gen_user(db, name=name, email=name + "@examplectf.com", team_id=team.id)
+        name = f"user-{random_string()}-{str(i)}"
+        user = gen_user(db, name=name, email=f"{name}@examplectf.com", team_id=team.id)
         if i == 0:
             team.captain_id = user.id
         team.members.append(user)

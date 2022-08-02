@@ -57,7 +57,7 @@ def test_user_token_access():
             user = gen_user(app.db, name="user2", email="user2@examplectf.com")
             expiration = datetime.datetime.utcnow() + datetime.timedelta(days=-1)
             token = generate_user_token(user, expiration=expiration)
-            headers = {"Authorization": "token " + token.value}
+            headers = {"Authorization": f"token {token.value}"}
             r = client.get("/api/v1/users/me", headers=headers, json="")
             assert r.status_code == 401
 
@@ -69,7 +69,7 @@ def test_user_token_access():
         with app.test_client() as client:
             user = gen_user(app.db, name="user1", email="user1@examplectf.com")
             token = generate_user_token(user, expiration=None)
-            headers = {"Authorization": "token " + token.value}
+            headers = {"Authorization": f"token {token.value}"}
             r = client.get("/api/v1/users/me", headers=headers, json="")
             assert r.status_code == 200
             resp = r.get_json()

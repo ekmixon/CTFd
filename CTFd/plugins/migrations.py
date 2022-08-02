@@ -20,7 +20,7 @@ def current(plugin_name=None):
         caller_path = caller_info[0]
         plugin_name = os.path.basename(os.path.dirname(caller_path))
 
-    return get_config(plugin_name + "_alembic_version")
+    return get_config(f"{plugin_name}_alembic_version")
 
 
 def upgrade(plugin_name=None, revision=None, lower="current"):
@@ -57,14 +57,10 @@ def upgrade(plugin_name=None, revision=None, lower="current"):
     # "current" points to the current plugin version stored in config
     # None represents the absolute base layer (e.g. first installation)
     if lower == "current":
-        lower = get_config(plugin_name + "_alembic_version")
+        lower = get_config(f"{plugin_name}_alembic_version")
 
     # Do we upgrade to head or to a specific revision
-    if revision is None:
-        upper = script.get_current_head()
-    else:
-        upper = revision
-
+    upper = script.get_current_head() if revision is None else revision
     # Apply from lower to upper
     revs = list(script.iterate_revisions(lower=lower, upper=upper))
     revs.reverse()
@@ -75,9 +71,9 @@ def upgrade(plugin_name=None, revision=None, lower="current"):
                 r.module.upgrade(op=op)
             # Set revision that succeeded so we don't need
             # to start from the beginning on failure
-            set_config(plugin_name + "_alembic_version", r.revision)
+            set_config(f"{plugin_name}_alembic_version", r.revision)
     finally:
         conn.close()
 
     # Set the new latest revision
-    set_config(plugin_name + "_alembic_version", upper)
+    set_config(f"{plugin_name}_alembic_version", upper)

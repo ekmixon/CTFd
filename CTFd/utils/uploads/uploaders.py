@@ -112,7 +112,7 @@ class S3Uploader(BaseUploader):
 
         md5hash = hexencode(os.urandom(16))
 
-        dst = md5hash + "/" + filename
+        dst = f"{md5hash}/{filename}"
         self.s3.upload_fileobj(file_obj, self.bucket, dst)
         return dst
 
@@ -124,11 +124,10 @@ class S3Uploader(BaseUploader):
             Params={
                 "Bucket": self.bucket,
                 "Key": key,
-                "ResponseContentDisposition": "attachment; filename={}".format(
-                    filename
-                ),
+                "ResponseContentDisposition": f"attachment; filename={filename}",
             },
         )
+
         return redirect(url)
 
     def delete(self, filename):

@@ -13,8 +13,8 @@ def log(logger, format, **kwargs):
         "id": session.get("id"),
         "date": time.strftime("%m/%d/%Y %X"),
         "ip": get_ip(),
-    }
-    props.update(kwargs)
+    } | kwargs
+
     msg = format.format(**props)
     print(msg)
     logger.info(msg)

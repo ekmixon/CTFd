@@ -66,36 +66,31 @@ class UserSchema(ma.ModelSchema):
         existing_user = Users.query.filter_by(name=name).first()
         current_user = get_current_user()
         if is_admin():
-            user_id = data.get("id")
-            if user_id:
+            if user_id := data.get("id"):
                 if existing_user and existing_user.id != user_id:
                     raise ValidationError(
                         "User name has already been taken", field_names=["name"]
                     )
-            else:
-                if existing_user:
-                    if current_user:
-                        if current_user.id != existing_user.id:
-                            raise ValidationError(
-                                "User name has already been taken", field_names=["name"]
-                            )
-                    else:
-                        raise ValidationError(
-                            "User name has already been taken", field_names=["name"]
-                        )
+            elif existing_user and (
+                current_user
+                and current_user.id != existing_user.id
+                or not current_user
+            ):
+                raise ValidationError(
+                    "User name has already been taken", field_names=["name"]
+                )
         else:
             if name == current_user.name:
                 return data
-            else:
-                name_changes = get_config("name_changes", default=True)
-                if bool(name_changes) is False:
-                    raise ValidationError(
-                        "Name changes are disabled", field_names=["name"]
-                    )
-                if existing_user:
-                    raise ValidationError(
-                        "User name has already been taken", field_names=["name"]
-                    )
+            name_changes = get_config("name_changes", default=True)
+            if not bool(name_changes):
+                raise ValidationError(
+                    "Name changes are disabled", field_names=["name"]
+                )
+            if existing_user:
+                raise ValidationError(
+                    "User name has already been taken", field_names=["name"]
+                )
 
     @pre_load
     def validate_email(self, data):
@@ -107,56 +102,51 @@ class UserSchema(ma.ModelSchema):
         existing_user = Users.query.filter_by(email=email).first()
         current_user = get_current_user()
         if is_admin():
-            user_id = data.get("id")
-            if user_id:
+            if user_id := data.get("id"):
                 if existing_user and existing_user.id != user_id:
                     raise ValidationError(
                         "Email address has already been used", field_names=["email"]
                     )
-            else:
-                if existing_user:
-                    if current_user:
-                        if current_user.id != existing_user.id:
-                            raise ValidationError(
-                                "Email address has already been used",
-                                field_names=["email"],
-                            )
-                    else:
-                        raise ValidationError(
-                            "Email address has already been used", field_names=["email"]
-                        )
+            elif existing_user and (
+                current_user
+                and current_user.id != existing_user.id
+                or not current_user
+            ):
+                raise ValidationError(
+                    "Email address has already been used",
+                    field_names=["email"],
+                )
         else:
             if email == current_user.email:
                 return data
-            else:
-                confirm = data.get("confirm")
+            confirm = data.get("confirm")
 
-                if bool(confirm) is False:
-                    raise ValidationError(
-                        "Please confirm your current password", field_names=["confirm"]
-                    )
-
-                test = verify_password(
-                    plaintext=confirm, ciphertext=current_user.password
+            if not bool(confirm):
+                raise ValidationError(
+                    "Please confirm your current password", field_names=["confirm"]
                 )
-                if test is False:
-                    raise ValidationError(
-                        "Your previous password is incorrect", field_names=["confirm"]
-                    )
 
-                if existing_user:
-                    raise ValidationError(
-                        "Email address has already been used", field_names=["email"]
-                    )
-                if check_email_is_whitelisted(email) is False:
-                    raise ValidationError(
-                        "Only email addresses under {domains} may register".format(
-                            domains=get_config("domain_whitelist")
-                        ),
-                        field_names=["email"],
-                    )
-                if get_config("verify_emails"):
-                    current_user.verified = False
+            test = verify_password(
+                plaintext=confirm, ciphertext=current_user.password
+            )
+            if test is False:
+                raise ValidationError(
+                    "Your previous password is incorrect", field_names=["confirm"]
+                )
+
+            if existing_user:
+                raise ValidationError(
+                    "Email address has already been used", field_names=["email"]
+                )
+            if check_email_is_whitelisted(email) is False:
+                raise ValidationError(
+                    "Only email addresses under {domains} may register".format(
+                        domains=get_config("domain_whitelist")
+                    ),
+                    field_names=["email"],
+                )
+            if get_config("verify_emails"):
+                current_user.verified = False
 
     @pre_load
     def validate_password_confirmation(self, data):
@@ -164,10 +154,8 @@ class UserSchema(ma.ModelSchema):
         confirm = data.get("confirm")
         target_user = get_current_user()
 
-        if is_admin():
-            pass
-        else:
-            if password and (bool(confirm) is False):
+        if not is_admin():
+            if password and not bool(confirm):
                 raise ValidationError(
                     "Please confirm your current password", field_names=["confirm"]
                 )
@@ -216,11 +204,9 @@ class UserSchema(ma.ModelSchema):
                     # # Check that we have an existing field for this. May be unnecessary b/c the foriegn key should enforce
                     field = UserFields.query.filter_by(id=field_id).first_or_404()
 
-                    # Get the existing field entry if one exists
-                    entry = UserFieldEntries.query.filter_by(
+                    if entry := UserFieldEntries.query.filter_by(
                         field_id=field.id, user_id=target_user.id
-                    ).first()
-                    if entry:
+                    ).first():
                         f["id"] = entry.id
                         provided_ids.append(entry.id)
 
@@ -299,9 +285,7 @@ class UserSchema(ma.ModelSchema):
                 if field.editable is False and field.public is False:
                     removed_field_ids.append(field.id)
 
-        # Rebuild fuilds
-        fields = data.get("fields")
-        if fields:
+        if fields := data.get("fields"):
             data["fields"] = [
                 field for field in fields if field["field_id"] not in removed_field_ids
             ]

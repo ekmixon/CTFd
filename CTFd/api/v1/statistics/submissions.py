@@ -10,14 +10,12 @@ from CTFd.utils.decorators import admins_only
 class SubmissionPropertyCounts(Resource):
     @admins_only
     def get(self, column):
-        if column in Submissions.__table__.columns.keys():
-            prop = getattr(Submissions, column)
-            data = (
-                Submissions.query.with_entities(prop, func.count(prop))
-                .group_by(prop)
-                .all()
-            )
-            return {"success": True, "data": dict(data)}
-        else:
-            response = {"success": False, "errors": "That could not be found"}, 404
-            return response
+        if column not in Submissions.__table__.columns.keys():
+            return {"success": False, "errors": "That could not be found"}, 404
+        prop = getattr(Submissions, column)
+        data = (
+            Submissions.query.with_entities(prop, func.count(prop))
+            .group_by(prop)
+            .all()
+        )
+        return {"success": True, "data": dict(data)}

@@ -13,10 +13,8 @@ def challenges_listing():
     field = request.args.get("field")
     filters = []
 
-    if q:
-        # The field exists as an exposed column
-        if Challenges.__mapper__.has_property(field):
-            filters.append(getattr(Challenges, field).like("%{}%".format(q)))
+    if q and Challenges.__mapper__.has_property(field):
+        filters.append(getattr(Challenges, field).like(f"%{q}%"))
 
     query = Challenges.query.filter(*filters).order_by(Challenges.id.asc())
     challenges = query.all()

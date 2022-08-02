@@ -60,10 +60,7 @@ def statistics():
         .all()
     )
 
-    solve_data = {}
-    for _chal, count, name in solves:
-        solve_data[name] = count
-
+    solve_data = {name: count for _chal, count, name in solves}
     most_solved = None
     least_solved = None
     if len(solve_data):

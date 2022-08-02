@@ -23,7 +23,7 @@ class APIDetailedSuccessResponse(APISimpleSuccessResponse):
             definition = schema["definitions"][ref]
             schema["properties"]["data"] = definition
             del schema["definitions"][ref]
-            if bool(schema["definitions"]) is False:
+            if not bool(schema["definitions"]):
                 del schema["definitions"]
         except KeyError:
             pass
@@ -47,7 +47,7 @@ class APIListSuccessResponse(APIDetailedSuccessResponse):
             definition = schema["definitions"][ref]
             schema["properties"]["data"]["items"] = definition
             del schema["definitions"][ref]
-            if bool(schema["definitions"]) is False:
+            if not bool(schema["definitions"]):
                 del schema["definitions"]
         except KeyError:
             pass
@@ -92,7 +92,7 @@ class PaginatedAPIListSuccessResponse(APIListSuccessResponse):
             definition = schema["definitions"][ref]
             schema["properties"]["data"]["items"] = definition
             del schema["definitions"][ref]
-            if bool(schema["definitions"]) is False:
+            if not bool(schema["definitions"]):
                 del schema["definitions"]
         except KeyError:
             pass

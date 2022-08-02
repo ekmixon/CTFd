@@ -140,7 +140,7 @@ def test_config_value_types():
             # Test booleans can be received
             r = admin.patch("/api/v1/configs", json={"view_after_ctf": True})
             assert r.status_code == 200
-            assert bool(get_config("view_after_ctf")) == True
+            assert bool(get_config("view_after_ctf"))
 
             # Test None can be received
             assert get_config("mail_username") is None

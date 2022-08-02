@@ -129,9 +129,8 @@ class Hint(Resource):
             if unlocked:
                 view = "unlocked"
 
-        if is_admin():
-            if request.args.get("preview", False):
-                view = "admin"
+        if is_admin() and request.args.get("preview", False):
+            view = "admin"
 
         response = HintSchema(view=view).dump(hint)
 

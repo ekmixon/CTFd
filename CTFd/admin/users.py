@@ -17,18 +17,17 @@ def users_listing():
     filters = []
     users = []
 
-    if q:
-        # The field exists as an exposed column
-        if Users.__mapper__.has_property(field):
-            filters.append(getattr(Users, field).like("%{}%".format(q)))
+    if q and Users.__mapper__.has_property(field):
+        filters.append(getattr(Users, field).like(f"%{q}%"))
 
     if q and field == "ip":
         users = (
             Users.query.join(Tracking, Users.id == Tracking.user_id)
-            .filter(Tracking.ip.like("%{}%".format(q)))
+            .filter(Tracking.ip.like(f"%{q}%"))
             .order_by(Users.id.asc())
             .paginate(page=page, per_page=50)
         )
+
     else:
         users = (
             Users.query.filter(*filters)

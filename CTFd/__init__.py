@@ -57,7 +57,7 @@ class CTFdFlask(Flask):
         self.start_time = datetime.datetime.utcnow()
 
         # Create generally unique run identifier
-        self.run_id = sha256(str(self.start_time))[0:8]
+        self.run_id = sha256(str(self.start_time))[:8]
         Flask.__init__(self, *args, **kwargs)
 
     def create_jinja_environment(self):
@@ -82,7 +82,7 @@ class SandboxedBaseEnvironment(SandboxedEnvironment):
         cache_name = name
         if name.startswith("admin/") is False:
             theme = str(utils.get_config("ctf_theme"))
-            cache_name = theme + "/" + name
+            cache_name = f"{theme}/{name}"
 
         # Rest of this code is copied from Jinja
         # https://github.com/pallets/jinja/blob/master/src/jinja2/environment.py#L802-L815
@@ -132,17 +132,15 @@ class ThemeLoader(FileSystemLoader):
 
 
 def confirm_upgrade():
-    if sys.stdin.isatty():
-        print("/*\\ CTFd has updated and must update the database! /*\\")
-        print("/*\\ Please backup your database before proceeding! /*\\")
-        print("/*\\ CTFd maintainers are not responsible for any data loss! /*\\")
-        if input("Run database migrations (Y/N)").lower().strip() == "y":  # nosec B322
-            return True
-        else:
-            print("/*\\ Ignored database migrations... /*\\")
-            return False
-    else:
+    if not sys.stdin.isatty():
         return True
+    print("/*\\ CTFd has updated and must update the database! /*\\")
+    print("/*\\ Please backup your database before proceeding! /*\\")
+    print("/*\\ CTFd maintainers are not responsible for any data loss! /*\\")
+    if input("Run database migrations (Y/N)").lower().strip() == "y":
+        return True
+    print("/*\\ Ignored database migrations... /*\\")
+    return False
 
 
 def run_upgrade():

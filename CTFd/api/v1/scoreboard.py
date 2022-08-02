@@ -84,8 +84,6 @@ class ScoreboardDetail(Resource):
     @check_score_visibility
     @cache.cached(timeout=60, key_prefix=make_cache_key)
     def get(self, count):
-        response = {}
-
         standings = get_standings(count=count)
 
         team_ids = [team.account_id for team in standings]
@@ -93,9 +91,7 @@ class ScoreboardDetail(Resource):
         solves = Solves.query.filter(Solves.account_id.in_(team_ids))
         awards = Awards.query.filter(Awards.account_id.in_(team_ids))
 
-        freeze = get_config("freeze")
-
-        if freeze:
+        if freeze := get_config("freeze"):
             solves = solves.filter(Solves.date < unix_time_to_utc(freeze))
             awards = awards.filter(Awards.date < unix_time_to_utc(freeze))
 
@@ -134,10 +130,14 @@ class ScoreboardDetail(Resource):
                 solves_mapper[team_id], key=lambda k: k["date"]
             )
 
-        for i, _team in enumerate(team_ids):
-            response[i + 1] = {
+        response = {
+            i
+            + 1: {
                 "id": standings[i].account_id,
                 "name": standings[i].name,
                 "solves": solves_mapper.get(standings[i].account_id, []),
             }
+            for i, _team in enumerate(team_ids)
+        }
+
         return {"success": True, "data": response}

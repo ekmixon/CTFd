@@ -22,13 +22,14 @@ challenges = Blueprint("challenges", __name__)
 @check_challenge_visibility
 def listing():
     if (
-        Configs.challenge_visibility == ChallengeVisibilityTypes.PUBLIC
-        and authed() is False
+        (
+            Configs.challenge_visibility != ChallengeVisibilityTypes.PUBLIC
+            or authed() is not False
+        )
+        and is_teams_mode()
+        and get_current_team() is None
     ):
-        pass
-    else:
-        if is_teams_mode() and get_current_team() is None:
-            return redirect(url_for("teams.private", next=request.full_path))
+        return redirect(url_for("teams.private", next=request.full_path))
 
     infos = get_infos()
     errors = get_errors()

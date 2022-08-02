@@ -40,8 +40,7 @@ def get_current_revision():
     engine = create_engine(app.config.get("SQLALCHEMY_DATABASE_URI"))
     conn = engine.connect()
     context = MigrationContext.configure(conn)
-    current_rev = context.get_current_revision()
-    return current_rev
+    return context.get_current_revision()
 
 
 def stamp_latest_revision():

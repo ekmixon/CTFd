@@ -48,7 +48,7 @@ def JSEnum(cls):
     if cls.__name__ not in JS_ENUMS:
         JS_ENUMS[cls.__name__] = dict(cls.__members__)
     else:
-        raise KeyError("{} was already defined as a JSEnum".format(cls.__name__))
+        raise KeyError(f"{cls.__name__} was already defined as a JSEnum")
     return cls
 
 
@@ -58,9 +58,8 @@ def JinjaEnum(cls):
     which allows you to access it from the front end. If you need to access
     an Enum from JS, a better tool to use is the JSEnum decorator.
     """
-    if cls.__name__ not in current_app.jinja_env.globals:
-        current_app.jinja_env.globals[cls.__name__] = cls
-        JINJA_ENUMS[cls.__name__] = cls
-    else:
-        raise KeyError("{} was already defined as a JinjaEnum".format(cls.__name__))
+    if cls.__name__ in current_app.jinja_env.globals:
+        raise KeyError(f"{cls.__name__} was already defined as a JinjaEnum")
+    current_app.jinja_env.globals[cls.__name__] = cls
+    JINJA_ENUMS[cls.__name__] = cls
     return cls

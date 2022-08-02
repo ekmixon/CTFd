@@ -51,21 +51,19 @@ def build_markdown(md, sanitize=False):
 
 @cache.memoize()
 def get_pages():
-    db_pages = Pages.query.filter(
-        Pages.route != "index", Pages.draft.isnot(True), Pages.hidden.isnot(True)
+    return Pages.query.filter(
+        Pages.route != "index",
+        Pages.draft.isnot(True),
+        Pages.hidden.isnot(True),
     ).all()
-    return db_pages
 
 
 @cache.memoize()
 def get_page(route):
-    page = db.session.execute(
+    if page := db.session.execute(
         Pages.__table__.select()
         .where(Pages.route == route)
         .where(Pages.draft.isnot(True))
-    ).fetchone()
-    if page:
-        # Convert the row into a transient ORM object so this change isn't commited accidentally
-        p = Pages(**page)
-        return p
+    ).fetchone():
+        return Pages(**page)
     return None

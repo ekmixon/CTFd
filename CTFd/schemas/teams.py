@@ -63,39 +63,32 @@ class TeamSchema(ma.ModelSchema):
         current_team = get_current_team()
         # Admins should be able to patch anyone but they cannot cause a collision.
         if is_admin():
-            team_id = int(data.get("id", 0))
-            if team_id:
+            if team_id := int(data.get("id", 0)):
                 if existing_team and existing_team.id != team_id:
                     raise ValidationError(
                         "Team name has already been taken", field_names=["name"]
                     )
-            else:
-                # If there's no Team ID it means that the admin is creating a team with no ID.
-                if existing_team:
-                    if current_team:
-                        if current_team.id != existing_team.id:
-                            raise ValidationError(
-                                "Team name has already been taken", field_names=["name"]
-                            )
-                    else:
-                        raise ValidationError(
-                            "Team name has already been taken", field_names=["name"]
-                        )
+            elif existing_team and (
+                current_team
+                and current_team.id != existing_team.id
+                or not current_team
+            ):
+                raise ValidationError(
+                    "Team name has already been taken", field_names=["name"]
+                )
         else:
-            # We need to allow teams to edit themselves and allow the "conflict"
             if data["name"] == current_team.name:
                 return data
-            else:
-                name_changes = get_config("name_changes", default=True)
-                if bool(name_changes) is False:
-                    raise ValidationError(
-                        "Name changes are disabled", field_names=["name"]
-                    )
+            name_changes = get_config("name_changes", default=True)
+            if not bool(name_changes):
+                raise ValidationError(
+                    "Name changes are disabled", field_names=["name"]
+                )
 
-                if existing_team:
-                    raise ValidationError(
-                        "Team name has already been taken", field_names=["name"]
-                    )
+            if existing_team:
+                raise ValidationError(
+                    "Team name has already been taken", field_names=["name"]
+                )
 
     @pre_load
     def validate_email(self, data):
@@ -105,35 +98,30 @@ class TeamSchema(ma.ModelSchema):
 
         existing_team = Teams.query.filter_by(email=email).first()
         if is_admin():
-            team_id = data.get("id")
-            if team_id:
+            if team_id := data.get("id"):
                 if existing_team and existing_team.id != team_id:
                     raise ValidationError(
                         "Email address has already been used", field_names=["email"]
                     )
-            else:
-                if existing_team:
-                    raise ValidationError(
-                        "Email address has already been used", field_names=["email"]
-                    )
+            elif existing_team:
+                raise ValidationError(
+                    "Email address has already been used", field_names=["email"]
+                )
         else:
             current_team = get_current_team()
             if email == current_team.email:
                 return data
-            else:
-                if existing_team:
-                    raise ValidationError(
-                        "Email address has already been used", field_names=["email"]
-                    )
+            if existing_team:
+                raise ValidationError(
+                    "Email address has already been used", field_names=["email"]
+                )
 
     @pre_load
     def validate_password_confirmation(self, data):
         password = data.get("password")
         confirm = data.get("confirm")
 
-        if is_admin():
-            pass
-        else:
+        if not is_admin():
             current_team = get_current_team()
             current_user = get_current_user()
 
@@ -143,7 +131,7 @@ class TeamSchema(ma.ModelSchema):
                     field_names=["captain_id"],
                 )
 
-            if password and (bool(confirm) is False):
+            if password and not bool(confirm):
                 raise ValidationError(
                     "Please confirm your current password", field_names=["confirm"]
                 )
@@ -172,8 +160,7 @@ class TeamSchema(ma.ModelSchema):
             return
 
         if is_admin():
-            team_id = data.get("id")
-            if team_id:
+            if team_id := data.get("id"):
                 target_team = Teams.query.filter_by(id=team_id).first()
             else:
                 target_team = get_current_team()
@@ -230,11 +217,9 @@ class TeamSchema(ma.ModelSchema):
                     # # Check that we have an existing field for this. May be unnecessary b/c the foriegn key should enforce
                     field = TeamFields.query.filter_by(id=field_id).first_or_404()
 
-                    # Get the existing field entry if one exists
-                    entry = TeamFieldEntries.query.filter_by(
+                    if entry := TeamFieldEntries.query.filter_by(
                         field_id=field.id, team_id=target_team.id
-                    ).first()
-                    if entry:
+                    ).first():
                         f["id"] = entry.id
                         provided_ids.append(entry.id)
 
@@ -313,9 +298,7 @@ class TeamSchema(ma.ModelSchema):
                 if field.editable is False and field.public is False:
                     removed_field_ids.append(field.id)
 
-        # Rebuild fuilds
-        fields = data.get("fields")
-        if fields:
+        if fields := data.get("fields"):
             data["fields"] = [
                 field for field in fields if field["field_id"] not in removed_field_ids
             ]

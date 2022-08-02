@@ -14,8 +14,7 @@ def make_cache_key(path=None, key_prefix="view/%s"):
     """
     if path is None:
         path = request.endpoint
-    cache_key = key_prefix % path
-    return cache_key
+    return key_prefix % path
 
 
 def clear_config():
@@ -56,8 +55,8 @@ def clear_standings():
     cache.delete_memoized(get_team_place)
 
     # Clear out HTTP request responses
-    cache.delete(make_cache_key(path=api.name + "." + ScoreboardList.endpoint))
-    cache.delete(make_cache_key(path=api.name + "." + ScoreboardDetail.endpoint))
+    cache.delete(make_cache_key(path=f"{api.name}.{ScoreboardList.endpoint}"))
+    cache.delete(make_cache_key(path=f"{api.name}.{ScoreboardDetail.endpoint}"))
     cache.delete_memoized(ScoreboardList.get)
 
     # Clear out scoreboard templates

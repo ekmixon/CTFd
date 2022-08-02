@@ -14,10 +14,8 @@ def teams_listing():
     page = abs(request.args.get("page", 1, type=int))
     filters = []
 
-    if q:
-        # The field exists as an exposed column
-        if Teams.__mapper__.has_property(field):
-            filters.append(getattr(Teams, field).like("%{}%".format(q)))
+    if q and Teams.__mapper__.has_property(field):
+        filters.append(getattr(Teams, field).like(f"%{q}%"))
 
     teams = (
         Teams.query.filter(*filters)

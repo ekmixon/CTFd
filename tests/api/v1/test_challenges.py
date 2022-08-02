@@ -194,8 +194,8 @@ def test_api_challenges_get_solve_count():
                 chal_data = r.get_json()["data"].pop()
                 assert chal_data["solves"] == i
                 # Generate a new user and solve for the challenge
-                uname = "user{}".format(i)
-                uemail = uname + "@examplectf.com"
+                uname = f"user{i}"
+                uemail = f"{uname}@examplectf.com"
                 register_user(app, name=uname, email=uemail)
                 gen_solve(app.db, user_id=_USER_BASE + i, challenge_id=chal_id)
             # Confirm solve count one final time against `_MAX`
@@ -582,7 +582,7 @@ def test_api_challenge_get_solve_status():
     app = create_ctfd()
     with app.app_context():
         chal_id = gen_challenge(app.db).id
-        chal_uri = "/api/v1/challenges/{}".format(chal_id)
+        chal_uri = f"/api/v1/challenges/{chal_id}"
         register_user(app)
         client = login_as_user(app)
         # First request - unsolved
@@ -606,7 +606,7 @@ def test_api_challenge_get_solve_info_score_visibility():
         set_config("challenge_visibility", "public")
         # Generate a challenge, user and solve to test the API with
         chal_id = gen_challenge(app.db).id
-        chal_uri = "/api/v1/challenges/{}".format(chal_id)
+        chal_uri = f"/api/v1/challenges/{chal_id}"
         register_user(app)
         gen_solve(app.db, user_id=2, challenge_id=chal_id)
 
@@ -666,7 +666,7 @@ def test_api_challenge_get_solve_info_account_visibility():
         set_config("challenge_visibility", "public")
         # Generate a challenge, user and solve to test the API with
         chal_id = gen_challenge(app.db).id
-        chal_uri = "/api/v1/challenges/{}".format(chal_id)
+        chal_uri = f"/api/v1/challenges/{chal_id}"
         register_user(app)
         gen_solve(app.db, user_id=2, challenge_id=chal_id)
 
@@ -728,7 +728,7 @@ def test_api_challenge_get_solve_count():
     with app.app_context():
         set_config("challenge_visibility", "public")
         chal_id = gen_challenge(app.db).id
-        chal_uri = "/api/v1/challenges/{}".format(chal_id)
+        chal_uri = f"/api/v1/challenges/{chal_id}"
         with app.test_client() as client:
             _USER_BASE = 2  # First user we create will have this ID
             _MAX = 3  # arbitrarily selected
@@ -739,8 +739,8 @@ def test_api_challenge_get_solve_count():
                 chal_data = r.get_json()["data"]
                 assert chal_data["solves"] == i
                 # Generate a new user and solve for the challenge
-                uname = "user{}".format(i)
-                uemail = uname + "@examplectf.com"
+                uname = f"user{i}"
+                uemail = f"{uname}@examplectf.com"
                 register_user(app, name=uname, email=uemail)
                 gen_solve(app.db, user_id=_USER_BASE + i, challenge_id=chal_id)
             # Confirm solve count one final time against `_MAX`
@@ -759,7 +759,7 @@ def test_api_challenge_get_solve_count_frozen():
         # Friday, October 6, 2017 4:00:00 AM
         set_config("freeze", "1507262400")
         chal_id = gen_challenge(app.db).id
-        chal_uri = "/api/v1/challenges/{}".format(chal_id)
+        chal_uri = f"/api/v1/challenges/{chal_id}"
 
         with freeze_time("2017-10-4"):
             # Create a user and generate a solve from before the freeze time
@@ -791,7 +791,7 @@ def test_api_challenge_get_solve_count_hidden_user():
     with app.app_context():
         set_config("challenge_visibility", "public")
         chal_id = gen_challenge(app.db).id
-        chal_uri = "/api/v1/challenges/{}".format(chal_id)
+        chal_uri = f"/api/v1/challenges/{chal_id}"
         # The admin is expected to be hidden by default
         gen_solve(app.db, user_id=1, challenge_id=chal_id)
         with app.test_client() as client:
@@ -809,7 +809,7 @@ def test_api_challenge_get_solve_count_banned_user():
     with app.app_context():
         set_config("challenge_visibility", "public")
         chal_id = gen_challenge(app.db).id
-        chal_uri = "/api/v1/challenges/{}".format(chal_id)
+        chal_uri = f"/api/v1/challenges/{chal_id}"
 
         # Create a user and generate a solve for the challenge
         register_user(app)

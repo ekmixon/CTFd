@@ -37,7 +37,7 @@ def register_plugin_assets_directory(app, base_path, admins_only=False, endpoint
     def assets_handler(path):
         return send_from_directory(base_path, path)
 
-    rule = "/" + base_path + "/<path:path>"
+    rule = f"/{base_path}/<path:path>"
     app.add_url_rule(rule=rule, endpoint=endpoint, view_func=assets_handler)
 
 
@@ -59,7 +59,7 @@ def register_plugin_asset(app, asset_path, admins_only=False, endpoint=None):
 
     if admins_only:
         asset_handler = admins_only_wrapper(asset_handler)
-    rule = "/" + asset_path
+    rule = f"/{asset_path}"
     app.add_url_rule(rule=rule, endpoint=endpoint, view_func=asset_handler)
 
 
@@ -169,7 +169,7 @@ def bypass_csrf_protection(f):
 
 
 def get_plugin_names():
-    modules = sorted(glob.glob(app.plugins_dir + "/*"))
+    modules = sorted(glob.glob(f"{app.plugins_dir}/*"))
     blacklist = {"__pycache__"}
     plugins = []
     for module in modules:
@@ -198,10 +198,10 @@ def init_plugins(app):
 
     if app.config.get("SAFE_MODE", False) is False:
         for plugin in get_plugin_names():
-            module = "." + plugin
+            module = f".{plugin}"
             module = importlib.import_module(module, package="CTFd.plugins")
             module.load(app)
-            print(" * Loaded module, %s" % module)
+            print(f" * Loaded module, {module}")
 
     app.jinja_env.globals.update(get_admin_plugin_menu_bar=get_admin_plugin_menu_bar)
     app.jinja_env.globals.update(get_user_page_menu_bar=get_user_page_menu_bar)

@@ -10,7 +10,7 @@ from CTFd.utils.modes import TEAMS_MODE, USERS_MODE
 
 def ctf_name():
     name = get_config("ctf_name")
-    return name if name else "CTFd"
+    return name or "CTFd"
 
 
 def user_mode():
@@ -31,7 +31,7 @@ def ctf_logo():
 
 def ctf_theme():
     theme = get_config("ctf_theme")
-    return theme if theme else ""
+    return theme or ""
 
 
 def ctf_theme_candidates():
@@ -41,13 +41,11 @@ def ctf_theme_candidates():
 
 
 def is_setup():
-    return bool(get_config("setup")) is True
+    return bool(get_config("setup"))
 
 
 def is_scoreboard_frozen():
-    freeze = get_config("freeze")
-
-    if freeze:
+    if freeze := get_config("freeze"):
         freeze = int(freeze)
         if freeze < time.time():
             return True
@@ -73,17 +71,13 @@ def get_mail_provider():
 def mailgun():
     if app.config.get("MAILGUN_API_KEY") and app.config.get("MAILGUN_BASE_URL"):
         return True
-    if get_config("mailgun_api_key") and get_config("mailgun_base_url"):
-        return True
-    return False
+    return bool(get_config("mailgun_api_key") and get_config("mailgun_base_url"))
 
 
 def mailserver():
     if app.config.get("MAIL_SERVER") and app.config.get("MAIL_PORT"):
         return True
-    if get_config("mail_server") and get_config("mail_port"):
-        return True
-    return False
+    return bool(get_config("mail_server") and get_config("mail_port"))
 
 
 def get_themes():

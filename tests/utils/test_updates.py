@@ -86,19 +86,16 @@ def test_update_check_ignores_downgrades(fake_post_request):
         fake_post_request.return_value = fake_response
         fake_response.json = lambda: {
             u"resource": {
-                u"html_url": u"https://github.com/CTFd/CTFd/releases/tag/{}".format(
-                    app.VERSION
-                ),
-                u"download_url": u"https://api.github.com/repos/CTFd/CTFd/zipball/{}".format(
-                    app.VERSION
-                ),
+                u"html_url": f"https://github.com/CTFd/CTFd/releases/tag/{app.VERSION}",
+                u"download_url": f"https://api.github.com/repos/CTFd/CTFd/zipball/{app.VERSION}",
                 u"published_at": u"Wed, 25 Oct 2017 19:39:42 -0000",
-                u"tag": u"{}".format(app.VERSION),
+                u"tag": f"{app.VERSION}",
                 u"prerelease": False,
                 u"id": 6,
                 u"latest": True,
             }
         }
+
         update_check()
         assert get_config("version_latest") is None
     destroy_ctfd(app)

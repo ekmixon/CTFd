@@ -72,7 +72,7 @@ class CachingSessionInterface(SessionInterface):
                 sid = self._generate_sid()
                 return self.session_class(sid=sid, permanent=self.permanent)
 
-        if isinstance(sid, text_type) is False:
+        if not isinstance(sid, text_type):
             sid = sid.decode("utf-8", "strict")
         val = cache.get(self.key_prefix + sid)
         if val is not None:
@@ -111,11 +111,7 @@ class CachingSessionInterface(SessionInterface):
                 timeout=total_seconds(app.permanent_session_lifetime),
             )
 
-            if self.use_signer:
-                session_id = sign(want_bytes(session.sid))
-            else:
-                session_id = session.sid
-
+            session_id = sign(want_bytes(session.sid)) if self.use_signer else session.sid
             response.set_cookie(
                 app.session_cookie_name,
                 session_id,

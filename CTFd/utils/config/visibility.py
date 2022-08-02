@@ -43,9 +43,4 @@ def accounts_visible():
 
 def registration_visible():
     v = get_config(ConfigTypes.REGISTRATION_VISIBILITY)
-    if v == RegistrationVisibilityTypes.PUBLIC:
-        return True
-    elif v == RegistrationVisibilityTypes.PRIVATE:
-        return False
-    else:
-        return False
+    return v == RegistrationVisibilityTypes.PUBLIC

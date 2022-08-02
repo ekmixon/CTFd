@@ -57,8 +57,7 @@ class _ConfigsWrapper:
 
     @property
     def ctf_small_icon(self):
-        icon = get_config("ctf_small_icon")
-        if icon:
+        if icon := get_config("ctf_small_icon"):
             return url_for("views.files", path=icon)
         return url_for("views.themes", path="img/favicon.ico")
 

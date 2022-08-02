@@ -21,16 +21,14 @@ def during_ctf_time_only(f):
     def during_ctf_time_only_wrapper(*args, **kwargs):
         if ctftime() or current_user.is_admin():
             return f(*args, **kwargs)
-        else:
-            if ctf_ended():
-                if view_after_ctf():
-                    return f(*args, **kwargs)
-                else:
-                    error = "{} has ended".format(config.ctf_name())
-                    abort(403, description=error)
-            if ctf_started() is False:
-                error = "{} has not started yet".format(config.ctf_name())
-                abort(403, description=error)
+        if ctf_ended():
+            if view_after_ctf():
+                return f(*args, **kwargs)
+            error = "{} has ended".format(config.ctf_name())
+            abort(403, description=error)
+        if ctf_started() is False:
+            error = "{} has not started yet".format(config.ctf_name())
+            abort(403, description=error)
 
     return during_ctf_time_only_wrapper
 
@@ -59,16 +57,18 @@ def require_verified_emails(f):
 
     @functools.wraps(f)
     def _require_verified_emails(*args, **kwargs):
-        if get_config("verify_emails"):
-            if current_user.authed():
-                if (
-                    current_user.is_admin() is False
-                    and current_user.is_verified() is False
-                ):  # User is not confirmed
-                    if request.content_type == "application/json":
-                        abort(403)
-                    else:
-                        return redirect(url_for("auth.confirm"))
+        if (
+            get_config("verify_emails")
+            and current_user.authed()
+            and (
+                current_user.is_admin() is False
+                and current_user.is_verified() is False
+            )
+        ):
+            if request.content_type == "application/json":
+                abort(403)
+            else:
+                return redirect(url_for("auth.confirm"))
         return f(*args, **kwargs)
 
     return _require_verified_emails
@@ -85,14 +85,13 @@ def authed_only(f):
     def authed_only_wrapper(*args, **kwargs):
         if authed():
             return f(*args, **kwargs)
+        if (
+            request.content_type == "application/json"
+            or request.accept_mimetypes.best == "text/event-stream"
+        ):
+            abort(403)
         else:
-            if (
-                request.content_type == "application/json"
-                or request.accept_mimetypes.best == "text/event-stream"
-            ):
-                abort(403)
-            else:
-                return redirect(url_for("auth.login", next=request.full_path))
+            return redirect(url_for("auth.login", next=request.full_path))
 
     return authed_only_wrapper
 
@@ -108,14 +107,13 @@ def registered_only(f):
     def _registered_only(*args, **kwargs):
         if authed():
             return f(*args, **kwargs)
+        if (
+            request.content_type == "application/json"
+            or request.accept_mimetypes.best == "text/event-stream"
+        ):
+            abort(403)
         else:
-            if (
-                request.content_type == "application/json"
-                or request.accept_mimetypes.best == "text/event-stream"
-            ):
-                abort(403)
-            else:
-                return redirect(url_for("auth.register", next=request.full_path))
+            return redirect(url_for("auth.register", next=request.full_path))
 
     return _registered_only
 
@@ -131,11 +129,10 @@ def admins_only(f):
     def admins_only_wrapper(*args, **kwargs):
         if is_admin():
             return f(*args, **kwargs)
+        if request.content_type == "application/json":
+            abort(403)
         else:
-            if request.content_type == "application/json":
-                abort(403)
-            else:
-                return redirect(url_for("auth.login", next=request.full_path))
+            return redirect(url_for("auth.login", next=request.full_path))
 
     return admins_only_wrapper
 
@@ -170,10 +167,10 @@ def ratelimit(method="POST", limit=50, interval=300, key_prefix="rl"):
                     resp = jsonify(
                         {
                             "code": 429,
-                            "message": "Too many requests. Limit is %s requests in %s seconds"
-                            % (limit, interval),
+                            "message": f"Too many requests. Limit is {limit} requests in {interval} seconds",
                         }
                     )
+
                     resp.status_code = 429
                     return resp
                 else:
@@ -193,32 +190,31 @@ def require_complete_profile(f):
 
     @functools.wraps(f)
     def _require_complete_profile(*args, **kwargs):
-        if authed():
-            if is_admin():
-                return f(*args, **kwargs)
-            else:
-                user = get_current_user()
-
-                if user.filled_all_required_fields is False:
-                    info_for(
-                        "views.settings",
-                        "Please fill out all required profile fields before continuing",
-                    )
-                    return redirect(url_for("views.settings"))
-
-                if is_teams_mode():
-                    team = get_current_team()
-
-                    if team and team.filled_all_required_fields is False:
-                        # This is an abort because it's difficult for us to flash information on the teams page
-                        return abort(
-                            403,
-                            description="Please fill in all required team profile fields",
-                        )
-
-                return f(*args, **kwargs)
-        else:
+        if not authed():
             # Fallback to whatever behavior the route defaults to
             return f(*args, **kwargs)
+
+        if is_admin():
+            return f(*args, **kwargs)
+        user = get_current_user()
+
+        if user.filled_all_required_fields is False:
+            info_for(
+                "views.settings",
+                "Please fill out all required profile fields before continuing",
+            )
+            return redirect(url_for("views.settings"))
+
+        if is_teams_mode():
+            team = get_current_team()
+
+            if team and team.filled_all_required_fields is False:
+                # This is an abort because it's difficult for us to flash information on the teams page
+                return abort(
+                    403,
+                    description="Please fill in all required team profile fields",
+                )
+
+        return f(*args, **kwargs)
 
     return _require_complete_profile

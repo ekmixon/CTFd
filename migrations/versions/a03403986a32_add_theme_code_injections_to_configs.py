@@ -33,10 +33,7 @@ def upgrade():
         config = connection.execute(
             configs_table.select().where(configs_table.c.key == "theme_header").limit(1)
         ).fetchone()
-        if config:
-            # Do not overwrite existing theme_header value
-            pass
-        else:
+        if not config:
             connection.execute(
                 configs_table.insert().values(key="theme_header", value=new_css)
             )

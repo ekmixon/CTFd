@@ -20,7 +20,7 @@ with app.app_context():
     else:
         ctf_name = config.ctf_name()
         day = datetime.datetime.now().strftime("%Y-%m-%d_%T")
-        full_name = "{}.{}.zip".format(ctf_name, day)
+        full_name = f"{ctf_name}.{day}.zip"
 
         with open(full_name, "wb") as target:
             shutil.copyfileobj(backup, target)

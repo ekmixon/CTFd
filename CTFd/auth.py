@@ -39,7 +39,7 @@ def confirm(data=None):
     if data and request.method == "GET":
         try:
             user_email = unserialize(data, max_age=1800)
-        except (BadTimeSignature, SignatureExpired):
+        except BadTimeSignature:
             return render_template(
                 "confirm.html", errors=["Your confirmation link has expired"]
             )
@@ -108,7 +108,7 @@ def reset_password(data=None):
     if data is not None:
         try:
             email_address = unserialize(data, max_age=1800)
-        except (BadTimeSignature, SignatureExpired):
+        except BadTimeSignature:
             return render_template(
                 "reset_password.html", errors=["Your link has expired"]
             )
@@ -189,175 +189,157 @@ def register():
     if current_user.authed():
         return redirect(url_for("challenges.listing"))
 
-    if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        email_address = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "").strip()
+    if request.method != "POST":
+        return render_template("register.html", errors=errors)
+    name = request.form.get("name", "").strip()
+    email_address = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "").strip()
 
-        website = request.form.get("website")
-        affiliation = request.form.get("affiliation")
-        country = request.form.get("country")
-        registration_code = str(request.form.get("registration_code", ""))
+    website = request.form.get("website")
+    affiliation = request.form.get("affiliation")
+    country = request.form.get("country")
+    registration_code = str(request.form.get("registration_code", ""))
 
-        name_len = len(name) == 0
-        names = Users.query.add_columns("name", "id").filter_by(name=name).first()
-        emails = (
-            Users.query.add_columns("email", "id")
-            .filter_by(email=email_address)
-            .first()
-        )
-        pass_short = len(password) == 0
-        pass_long = len(password) > 128
-        valid_email = validators.validate_email(email_address)
-        team_name_email_check = validators.validate_email(name)
+    name_len = len(name) == 0
+    names = Users.query.add_columns("name", "id").filter_by(name=name).first()
+    emails = (
+        Users.query.add_columns("email", "id")
+        .filter_by(email=email_address)
+        .first()
+    )
+    pass_short = len(password) == 0
+    pass_long = len(password) > 128
+    valid_email = validators.validate_email(email_address)
+    team_name_email_check = validators.validate_email(name)
 
-        if get_config("registration_code"):
-            if (
-                registration_code.lower()
-                != str(get_config("registration_code", default="")).lower()
-            ):
-                errors.append("The registration code you entered was incorrect")
+    if get_config("registration_code") and (
+        registration_code.lower()
+        != str(get_config("registration_code", default="")).lower()
+    ):
+        errors.append("The registration code you entered was incorrect")
 
         # Process additional user fields
-        fields = {}
-        for field in UserFields.query.all():
-            fields[field.id] = field
+    fields = {field.id: field for field in UserFields.query.all()}
+    entries = {}
+    for field_id, field in fields.items():
+        value = request.form.get(f"fields[{field_id}]", "").strip()
+        if field.required is True and (value is None or value == ""):
+            errors.append("Please provide all required fields")
+            break
 
-        entries = {}
-        for field_id, field in fields.items():
-            value = request.form.get(f"fields[{field_id}]", "").strip()
-            if field.required is True and (value is None or value == ""):
-                errors.append("Please provide all required fields")
-                break
+        # Handle special casing of existing profile fields
+        if field.name.lower() == "affiliation":
+            affiliation = value
+            break
+        elif field.name.lower() == "website":
+            website = value
+            break
 
-            # Handle special casing of existing profile fields
-            if field.name.lower() == "affiliation":
-                affiliation = value
-                break
-            elif field.name.lower() == "website":
-                website = value
-                break
-
-            if field.field_type == "boolean":
-                entries[field_id] = bool(value)
-            else:
-                entries[field_id] = value
-
-        if country:
-            try:
-                validators.validate_country_code(country)
-                valid_country = True
-            except ValidationError:
-                valid_country = False
-        else:
+        entries[field_id] = bool(value) if field.field_type == "boolean" else value
+    if country:
+        try:
+            validators.validate_country_code(country)
             valid_country = True
+        except ValidationError:
+            valid_country = False
+    else:
+        valid_country = True
+
+    valid_website = validators.validate_url(website) if website else True
+    valid_affiliation = len(affiliation) < 128 if affiliation else True
+    if not valid_email:
+        errors.append("Please enter a valid email address")
+    if email.check_email_is_whitelisted(email_address) is False:
+        errors.append(
+            "Only email addresses under {domains} may register".format(
+                domains=get_config("domain_whitelist")
+            )
+        )
+    if names:
+        errors.append("That user name is already taken")
+    if team_name_email_check is True:
+        errors.append("Your user name cannot be an email address")
+    if emails:
+        errors.append("That email has already been used")
+    if pass_short:
+        errors.append("Pick a longer password")
+    if pass_long:
+        errors.append("Pick a shorter password")
+    if name_len:
+        errors.append("Pick a longer user name")
+    if valid_website is False:
+        errors.append("Websites must be a proper URL starting with http or https")
+    if not valid_country:
+        errors.append("Invalid country")
+    if not valid_affiliation:
+        errors.append("Please provide a shorter affiliation")
+
+    if len(errors) > 0:
+        return render_template(
+            "register.html",
+            errors=errors,
+            name=request.form["name"],
+            email=request.form["email"],
+            password=request.form["password"],
+        )
+    with app.app_context():
+        user = Users(name=name, email=email_address, password=password)
 
         if website:
-            valid_website = validators.validate_url(website)
-        else:
-            valid_website = True
-
+            user.website = website
         if affiliation:
-            valid_affiliation = len(affiliation) < 128
-        else:
-            valid_affiliation = True
+            user.affiliation = affiliation
+        if country:
+            user.country = country
 
-        if not valid_email:
-            errors.append("Please enter a valid email address")
-        if email.check_email_is_whitelisted(email_address) is False:
-            errors.append(
-                "Only email addresses under {domains} may register".format(
-                    domains=get_config("domain_whitelist")
-                )
+        db.session.add(user)
+        db.session.commit()
+        db.session.flush()
+
+        for field_id, value in entries.items():
+            entry = UserFieldEntries(
+                field_id=field_id, value=value, user_id=user.id
             )
-        if names:
-            errors.append("That user name is already taken")
-        if team_name_email_check is True:
-            errors.append("Your user name cannot be an email address")
-        if emails:
-            errors.append("That email has already been used")
-        if pass_short:
-            errors.append("Pick a longer password")
-        if pass_long:
-            errors.append("Pick a shorter password")
-        if name_len:
-            errors.append("Pick a longer user name")
-        if valid_website is False:
-            errors.append("Websites must be a proper URL starting with http or https")
-        if valid_country is False:
-            errors.append("Invalid country")
-        if valid_affiliation is False:
-            errors.append("Please provide a shorter affiliation")
+            db.session.add(entry)
+        db.session.commit()
 
-        if len(errors) > 0:
-            return render_template(
-                "register.html",
-                errors=errors,
-                name=request.form["name"],
-                email=request.form["email"],
-                password=request.form["password"],
+        login_user(user)
+
+        if request.args.get("next") and validators.is_safe_url(
+            request.args.get("next")
+        ):
+            return redirect(request.args.get("next"))
+
+        if config.can_send_mail() and get_config(
+            "verify_emails"
+        ):  # Confirming users is enabled and we can send email.
+            log(
+                "registrations",
+                format="[{date}] {ip} - {name} registered (UNCONFIRMED) with {email}",
+                name=user.name,
+                email=user.email,
             )
-        else:
-            with app.app_context():
-                user = Users(name=name, email=email_address, password=password)
+            email.verify_email_address(user.email)
+            db.session.close()
+            return redirect(url_for("auth.confirm"))
+        else:  # Don't care about confirming users
+            if (
+                config.can_send_mail()
+            ):  # We want to notify the user that they have registered.
+                email.successful_registration_notification(user.email)
 
-                if website:
-                    user.website = website
-                if affiliation:
-                    user.affiliation = affiliation
-                if country:
-                    user.country = country
+    log(
+        "registrations",
+        format="[{date}] {ip} - {name} registered with {email}",
+        name=user.name,
+        email=user.email,
+    )
+    db.session.close()
 
-                db.session.add(user)
-                db.session.commit()
-                db.session.flush()
+    if is_teams_mode():
+        return redirect(url_for("teams.private"))
 
-                for field_id, value in entries.items():
-                    entry = UserFieldEntries(
-                        field_id=field_id, value=value, user_id=user.id
-                    )
-                    db.session.add(entry)
-                db.session.commit()
-
-                login_user(user)
-
-                if request.args.get("next") and validators.is_safe_url(
-                    request.args.get("next")
-                ):
-                    return redirect(request.args.get("next"))
-
-                if config.can_send_mail() and get_config(
-                    "verify_emails"
-                ):  # Confirming users is enabled and we can send email.
-                    log(
-                        "registrations",
-                        format="[{date}] {ip} - {name} registered (UNCONFIRMED) with {email}",
-                        name=user.name,
-                        email=user.email,
-                    )
-                    email.verify_email_address(user.email)
-                    db.session.close()
-                    return redirect(url_for("auth.confirm"))
-                else:  # Don't care about confirming users
-                    if (
-                        config.can_send_mail()
-                    ):  # We want to notify the user that they have registered.
-                        email.successful_registration_notification(user.email)
-
-        log(
-            "registrations",
-            format="[{date}] {ip} - {name} registered with {email}",
-            name=user.name,
-            email=user.email,
-        )
-        db.session.close()
-
-        if is_teams_mode():
-            return redirect(url_for("teams.private"))
-
-        return redirect(url_for("challenges.listing"))
-    else:
-        return render_template("register.html", errors=errors)
+    return redirect(url_for("challenges.listing"))
 
 
 @auth.route("/login", methods=["POST", "GET"])
@@ -423,11 +405,7 @@ def oauth_login():
         or "https://auth.majorleaguecyber.org/oauth/authorize"
     )
 
-    if get_config("user_mode") == "teams":
-        scope = "profile team"
-    else:
-        scope = "profile"
-
+    scope = "profile team" if get_config("user_mode") == "teams" else "profile"
     client_id = get_app_config("OAUTH_CLIENT_ID") or get_config("oauth_client_id")
 
     if client_id is None:
@@ -483,9 +461,10 @@ def oauth_redirect():
             )
 
             headers = {
-                "Authorization": "Bearer " + str(token),
+                "Authorization": f"Bearer {str(token)}",
                 "Content-type": "application/json",
             }
+
             api_data = requests.get(url=user_url, headers=headers).json()
 
             user_id = api_data["id"]

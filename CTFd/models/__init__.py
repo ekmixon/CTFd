@@ -19,10 +19,14 @@ def get_class_by_tablename(tablename):
     :param tablename: String with name of table.
     :return: Class reference or None.
     """
-    for c in db.Model._decl_class_registry.values():
-        if hasattr(c, "__tablename__") and c.__tablename__ == tablename:
-            return c
-    return None
+    return next(
+        (
+            c
+            for c in db.Model._decl_class_registry.values()
+            if hasattr(c, "__tablename__") and c.__tablename__ == tablename
+        ),
+        None,
+    )
 
 
 class Notifications(db.Model):
@@ -66,12 +70,10 @@ class Pages(db.Model):
     def html(self):
         from CTFd.utils.config.pages import build_html, build_markdown
 
-        if self.format == "markdown":
+        if self.format == "markdown" or self.format != "html":
             return build_markdown(self.content)
-        elif self.format == "html":
-            return build_html(self.content)
         else:
-            return build_markdown(self.content)
+            return build_html(self.content)
 
     def __init__(self, *args, **kwargs):
         super(Pages, self).__init__(**kwargs)
@@ -389,10 +391,7 @@ class Users(db.Model):
     def place(self):
         from CTFd.utils.config.visibility import scores_visible
 
-        if scores_visible():
-            return self.get_place(admin=False)
-        else:
-            return None
+        return self.get_place(admin=False) if scores_visible() else None
 
     @property
     def filled_all_required_fields(self):
@@ -497,11 +496,8 @@ class Users(db.Model):
         for i, user in enumerate(standings):
             if user.user_id == self.id:
                 n = i + 1
-                if numeric:
-                    return n
-                return ordinalize(n)
-        else:
-            return None
+                return n if numeric else ordinalize(n)
+        return None
 
 
 class Admins(Users):
@@ -576,10 +572,7 @@ class Teams(db.Model):
     def place(self):
         from CTFd.utils.config.visibility import scores_visible
 
-        if scores_visible():
-            return self.get_place(admin=False)
-        else:
-            return None
+        return self.get_place(admin=False) if scores_visible() else None
 
     @property
     def filled_all_required_fields(self):
@@ -620,8 +613,7 @@ class Teams(db.Model):
             "id": self.id,
             "v": hmac(str(self.id), secret=verification_secret),
         }
-        code = serialize(data=invite_object, secret=secret_key)
-        return code
+        return serialize(data=invite_object, secret=secret_key)
 
     @classmethod
     def load_invite_code(cls, code):
@@ -657,7 +649,7 @@ class Teams(db.Model):
 
         # Verify the team verficiation code
         verified = hmac(str(team.id), secret=verification_secret) == invite_object["v"]
-        if verified is False:
+        if not verified:
             raise TeamTokenInvalidException
         return team
 
@@ -711,10 +703,7 @@ class Teams(db.Model):
 
     @cache.memoize()
     def get_score(self, admin=False):
-        score = 0
-        for member in self.members:
-            score += member.get_score(admin=admin)
-        return score
+        return sum(member.get_score(admin=admin) for member in self.members)
 
     @cache.memoize()
     def get_place(self, admin=False, numeric=False):
@@ -732,11 +721,8 @@ class Teams(db.Model):
         for i, team in enumerate(standings):
             if team.team_id == self.id:
                 n = i + 1
-                if numeric:
-                    return n
-                return ordinalize(n)
-        else:
-            return None
+                return n if numeric else ordinalize(n)
+        return None
 
 
 class Submissions(db.Model):

@@ -181,7 +181,7 @@ def test_user_isnt_admin():
             "statistics",
             "config",
         ]:
-            r = client.get("/admin/{}".format(page))
+            r = client.get(f"/admin/{page}")
             assert r.location.startswith("http://localhost/login?next=")
             assert r.status_code == 302
     destroy_ctfd(app)
@@ -359,7 +359,7 @@ def test_user_can_reset_password(mock_smtp):
 
             ctf_name = get_config("ctf_name")
             from_addr = get_config("mailfrom_addr") or app.config.get("MAILFROM_ADDR")
-            from_addr = "{} <{}>".format(ctf_name, from_addr)
+            from_addr = f"{ctf_name} <{from_addr}>"
 
             to_addr = "user@user.com"
 

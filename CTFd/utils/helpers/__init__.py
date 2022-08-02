@@ -12,19 +12,19 @@ def markup(text):
 
 
 def info_for(endpoint, message):
-    flash(message=message, category=endpoint + ".infos")
+    flash(message=message, category=f"{endpoint}.infos")
 
 
 def error_for(endpoint, message):
-    flash(message=message, category=endpoint + ".errors")
+    flash(message=message, category=f"{endpoint}.errors")
 
 
 def get_infos():
-    return get_flashed_messages(category_filter=request.endpoint + ".infos")
+    return get_flashed_messages(category_filter=f"{request.endpoint}.infos")
 
 
 def get_errors():
-    return get_flashed_messages(category_filter=request.endpoint + ".errors")
+    return get_flashed_messages(category_filter=f"{request.endpoint}.errors")
 
 
 @current_app.url_defaults

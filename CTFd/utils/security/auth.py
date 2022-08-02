@@ -47,11 +47,8 @@ def generate_user_token(user, expiration=None):
 
 
 def lookup_user_token(token):
-    token = UserTokens.query.filter_by(value=token).first()
-    if token:
-        if datetime.datetime.utcnow() >= token.expiration:
-            raise UserTokenExpiredException
-        return token.user
-    else:
+    if not (token := UserTokens.query.filter_by(value=token).first()):
         raise UserNotFoundException
-    return None
+    if datetime.datetime.utcnow() >= token.expiration:
+        raise UserTokenExpiredException
+    return token.user

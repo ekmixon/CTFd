@@ -26,7 +26,7 @@ def jsenums():
 
     with open(path, "w+") as f:
         for k, v in JS_ENUMS.items():
-            f.write("const {} = Object.freeze({});".format(k, json.dumps(v)))
+            f.write(f"const {k} = Object.freeze({json.dumps(v)});")
 
 
 BUILD_COMMANDS = {"jsenums": jsenums}

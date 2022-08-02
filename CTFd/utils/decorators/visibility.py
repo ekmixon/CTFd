@@ -23,25 +23,23 @@ def check_score_visibility(f):
         elif v == ScoreVisibilityTypes.PRIVATE:
             if authed():
                 return f(*args, **kwargs)
+            if request.content_type == "application/json":
+                abort(403)
             else:
-                if request.content_type == "application/json":
-                    abort(403)
-                else:
-                    return redirect(url_for("auth.login", next=request.full_path))
+                return redirect(url_for("auth.login", next=request.full_path))
 
         elif v == ScoreVisibilityTypes.HIDDEN:
             if is_admin():
                 return f(*args, **kwargs)
+            if request.content_type == "application/json":
+                abort(403)
             else:
-                if request.content_type == "application/json":
-                    abort(403)
-                else:
-                    return (
-                        render_template(
-                            "errors/403.html", error="Scores are currently hidden"
-                        ),
-                        403,
-                    )
+                return (
+                    render_template(
+                        "errors/403.html", error="Scores are currently hidden"
+                    ),
+                    403,
+                )
 
         elif v == ScoreVisibilityTypes.ADMINS:
             if is_admin():
@@ -62,20 +60,18 @@ def check_challenge_visibility(f):
         elif v == ChallengeVisibilityTypes.PRIVATE:
             if authed():
                 return f(*args, **kwargs)
+            if request.content_type == "application/json":
+                abort(403)
             else:
-                if request.content_type == "application/json":
-                    abort(403)
-                else:
-                    return redirect(url_for("auth.login", next=request.full_path))
+                return redirect(url_for("auth.login", next=request.full_path))
 
         elif v == ChallengeVisibilityTypes.ADMINS:
             if is_admin():
                 return f(*args, **kwargs)
+            if authed():
+                abort(403)
             else:
-                if authed():
-                    abort(403)
-                else:
-                    return redirect(url_for("auth.login", next=request.full_path))
+                return redirect(url_for("auth.login", next=request.full_path))
 
     return _check_challenge_visibility
 
@@ -90,11 +86,10 @@ def check_account_visibility(f):
         elif v == AccountVisibilityTypes.PRIVATE:
             if authed():
                 return f(*args, **kwargs)
+            if request.content_type == "application/json":
+                abort(403)
             else:
-                if request.content_type == "application/json":
-                    abort(403)
-                else:
-                    return redirect(url_for("auth.login", next=request.full_path))
+                return redirect(url_for("auth.login", next=request.full_path))
 
         elif v == AccountVisibilityTypes.ADMINS:
             if is_admin():

@@ -12,17 +12,15 @@ from CTFd.utils.modes import get_model
 class ChallengePropertyCounts(Resource):
     @admins_only
     def get(self, column):
-        if column in Challenges.__table__.columns.keys():
-            prop = getattr(Challenges, column)
-            data = (
-                Challenges.query.with_entities(prop, func.count(prop))
-                .group_by(prop)
-                .all()
-            )
-            return {"success": True, "data": dict(data)}
-        else:
-            response = {"message": "That could not be found"}, 404
-            return response
+        if column not in Challenges.__table__.columns.keys():
+            return {"message": "That could not be found"}, 404
+        prop = getattr(Challenges, column)
+        data = (
+            Challenges.query.with_entities(prop, func.count(prop))
+            .group_by(prop)
+            .all()
+        )
+        return {"success": True, "data": dict(data)}
 
 
 @statistics_namespace.route("/challenges/solves")

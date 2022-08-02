@@ -26,7 +26,7 @@ def test_sendmail_with_smtp_from_config_file(mock_smtp):
 
         ctf_name = get_config("ctf_name")
         from_addr = get_config("mailfrom_addr") or app.config.get("MAILFROM_ADDR")
-        from_addr = "{} <{}>".format(ctf_name, from_addr)
+        from_addr = f"{ctf_name} <{from_addr}>"
 
         to_addr = "user@user.com"
         msg = "this is a test"
@@ -62,7 +62,7 @@ def test_sendmail_with_smtp_from_db_config(mock_smtp):
 
         ctf_name = get_config("ctf_name")
         from_addr = get_config("mailfrom_addr") or app.config.get("MAILFROM_ADDR")
-        from_addr = "{} <{}>".format(ctf_name, from_addr)
+        from_addr = f"{ctf_name} <{from_addr}>"
 
         to_addr = "user@user.com"
         msg = "this is a test"
@@ -173,7 +173,7 @@ def test_verify_email(mock_smtp):
 
         ctf_name = get_config("ctf_name")
         from_addr = get_config("mailfrom_addr") or app.config.get("MAILFROM_ADDR")
-        from_addr = "{} <{}>".format(ctf_name, from_addr)
+        from_addr = f"{ctf_name} <{from_addr}>"
 
         to_addr = "user@user.com"
 
@@ -218,7 +218,7 @@ def test_successful_registration_email(mock_smtp):
 
         ctf_name = get_config("ctf_name")
         from_addr = get_config("mailfrom_addr") or app.config.get("MAILFROM_ADDR")
-        from_addr = "{} <{}>".format(ctf_name, from_addr)
+        from_addr = f"{ctf_name} <{from_addr}>"
 
         to_addr = "user@user.com"
 

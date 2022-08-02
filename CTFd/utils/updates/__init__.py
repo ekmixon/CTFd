@@ -32,10 +32,7 @@ def update_check(force=False):
     # Get when we should check for updates next.
     next_update_check = get_config("next_update_check") or 0
 
-    # If we have passed our saved time or we are forcing we should check.
-    update = (next_update_check < time.time()) or force
-
-    if update:
+    if update := (next_update_check < time.time()) or force:
         try:
             name = str(get_config("ctf_name")) or ""
             params = {

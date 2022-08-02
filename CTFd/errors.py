@@ -12,9 +12,10 @@ def render_error(error):
     try:
         return (
             render_template(
-                "errors/{}.html".format(error.code), error=error.description,
+                f"errors/{error.code}.html", error=error.description
             ),
             error.code,
         )
+
     except jinja2.exceptions.TemplateNotFound:
         return error.get_response()

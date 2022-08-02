@@ -40,7 +40,7 @@ def test_reset():
         base_user = "user"
 
         for x in range(10):
-            chal = gen_challenge(app.db, name="chal_name{}".format(x))
+            chal = gen_challenge(app.db, name=f"chal_name{x}")
             gen_flag(app.db, challenge_id=chal.id, content="flag")
             gen_hint(app.db, challenge_id=chal.id)
             gen_file(
@@ -51,7 +51,7 @@ def test_reset():
 
         for x in range(10):
             user = base_user + str(x)
-            user_email = user + "@examplectf.com"
+            user_email = f"{user}@examplectf.com"
             user_obj = gen_user(app.db, name=user, email=user_email)
             gen_award(app.db, user_id=user_obj.id)
             gen_solve(app.db, user_id=user_obj.id, challenge_id=random.randint(1, 10))
@@ -142,7 +142,7 @@ def test_reset_team_mode():
         base_team = "team"
 
         for x in range(10):
-            chal = gen_challenge(app.db, name="chal_name{}".format(x))
+            chal = gen_challenge(app.db, name=f"chal_name{x}")
             gen_flag(app.db, challenge_id=chal.id, content="flag")
             gen_hint(app.db, challenge_id=chal.id)
             gen_file(
@@ -153,7 +153,7 @@ def test_reset_team_mode():
 
         for x in range(10):
             user = base_user + str(x)
-            user_email = user + "@examplectf.com"
+            user_email = f"{user}@examplectf.com"
             user_obj = gen_user(app.db, name=user, email=user_email)
             team_obj = gen_team(
                 app.db,

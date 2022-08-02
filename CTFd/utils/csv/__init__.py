@@ -25,13 +25,11 @@ def get_dumpable_tables():
     csv_keys = list(CSV_KEYS.keys())
     db_keys = list(db.metadata.tables.keys())
     tables = csv_keys + db_keys
-    table_keys = list(zip(tables, tables))
-    return table_keys
+    return list(zip(tables, tables))
 
 
 def dump_csv(name):
-    dump_func = CSV_KEYS.get(name)
-    if dump_func:
+    if dump_func := CSV_KEYS.get(name):
         return dump_func()
     elif get_class_by_tablename(name):
         return dump_database_table(tablename=name)
@@ -242,9 +240,7 @@ def load_users_csv(dict_reader):
         else:
             db.session.add(response.data)
             db.session.commit()
-    if errors:
-        return errors
-    return True
+    return errors or True
 
 
 def load_teams_csv(dict_reader):
@@ -257,9 +253,7 @@ def load_teams_csv(dict_reader):
         else:
             db.session.add(response.data)
             db.session.commit()
-    if errors:
-        return errors
-    return True
+    return errors or True
 
 
 def load_challenges_csv(dict_reader):
@@ -310,9 +304,7 @@ def load_challenges_csv(dict_reader):
                 h = Hints(challenge_id=challenge.id, content=hint,)
                 db.session.add(h)
                 db.session.commit()
-    if errors:
-        return errors
-    return True
+    return errors or True
 
 
 CSV_KEYS = {

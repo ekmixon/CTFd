@@ -76,14 +76,11 @@ def setup():
             set_config("ctf_description", ctf_description)
             set_config("user_mode", user_mode)
 
-            # Style
-            ctf_logo = request.files.get("ctf_logo")
-            if ctf_logo:
+            if ctf_logo := request.files.get("ctf_logo"):
                 f = upload_file(file=ctf_logo)
                 set_config("ctf_logo", f.location)
 
-            ctf_small_icon = request.files.get("ctf_small_icon")
-            if ctf_small_icon:
+            if ctf_small_icon := request.files.get("ctf_small_icon"):
                 f = upload_file(file=ctf_small_icon)
                 set_config("ctf_small_icon", f.location)
 
@@ -91,7 +88,7 @@ def setup():
             set_config("ctf_theme", theme)
             theme_color = request.form.get("theme_color")
             theme_header = get_config("theme_header")
-            if theme_color and bool(theme_header) is False:
+            if theme_color and not bool(theme_header):
                 # Uses {{ and }} to insert curly braces while using the format method
                 css = (
                     '<style id="theme-color">\n'
@@ -158,8 +155,7 @@ def setup():
 
             # Upload banner
             default_ctf_banner_location = url_for("views.themes", path="img/logo.png")
-            ctf_banner = request.files.get("ctf_banner")
-            if ctf_banner:
+            if ctf_banner := request.files.get("ctf_banner"):
                 f = upload_file(file=ctf_banner, page_id=page.id)
                 default_ctf_banner_location = url_for("views.files", path=f.location)
 
@@ -274,11 +270,8 @@ def integrations():
 
         try:
             state = unserialize(state, max_age=3600)
-        except (BadSignature, BadTimeSignature):
-            state = False
         except Exception:
             state = False
-
         if state:
             if name == "mlc":
                 mlc_client_id = request.values.get("mlc_client_id")
@@ -352,10 +345,10 @@ def static_html(route):
     page = get_page(route)
     if page is None:
         abort(404)
-    else:
-        if page.auth_required and authed() is False:
-            return redirect(url_for("auth.login", next=request.full_path))
+    elif page.auth_required and authed() is False:
+        return redirect(url_for("auth.login", next=request.full_path))
 
+    else:
         return render_template("page.html", content=page.html, title=page.title)
 
 
@@ -394,12 +387,12 @@ def files(path):
     f = Files.query.filter_by(location=path).first_or_404()
     if f.type == "challenge":
         if challenges_visible():
-            if current_user.is_admin() is False:
-                if not ctftime():
-                    if ctf_ended() and view_after_ctf():
-                        pass
-                    else:
-                        abort(403)
+            if (
+                current_user.is_admin() is False
+                and not ctftime()
+                and (not ctf_ended() or not view_after_ctf())
+            ):
+                abort(403)
         else:
             if not ctftime():
                 abort(403)
@@ -422,25 +415,16 @@ def files(path):
                     abort(403)
 
                 # Check that the user exists and isn't banned
-                if user:
-                    if user.banned:
-                        abort(403)
-                else:
+                if user and user.banned or not user:
                     abort(403)
-
                 # Check that the team isn't banned
-                if team:
-                    if team.banned:
-                        abort(403)
-                else:
-                    pass
-
+                if team and team.banned:
+                    abort(403)
                 # Check that the token properly refers to the file
                 if file_id != f.id:
                     abort(403)
 
-            # The token isn't expired or broken
-            except (BadTimeSignature, SignatureExpired, BadSignature):
+            except BadSignature:
                 abort(403)
 
     uploader = get_uploader()

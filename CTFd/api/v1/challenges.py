@@ -175,12 +175,13 @@ class ChallengeList(Resource):
         # Require a team if in teams mode
         # TODO: Convert this into a re-useable decorator
         # TODO: The require_team decorator doesnt work because of no admin passthru
-        if get_current_user_attrs():
-            if is_admin():
-                pass
-            else:
-                if config.is_teams_mode() and get_current_team_attrs() is None:
-                    abort(403)
+        if (
+            get_current_user_attrs()
+            and not is_admin()
+            and config.is_teams_mode()
+            and get_current_team_attrs() is None
+        ):
+            abort(403)
 
         # Build filtering queries
         q = query_args.pop("q", None)
@@ -190,7 +191,6 @@ class ChallengeList(Resource):
         # Admins get a shortcut to see all challenges despite pre-requisites
         admin_view = is_admin() and request.args.get("view") == "admin"
 
-        solve_counts = {}
         # Build a query for to show challenge solve information. We only
         # give an admin view if the request argument has been provided.
         #
@@ -198,10 +198,7 @@ class ChallengeList(Resource):
         # endpoint which only needs the current user to be an admin rather
         # than also also having to provide `view=admin` as a query arg.
         solves_q, user_solves = _build_solves_query(admin_view=admin_view)
-        # Aggregate the query results into the hashes defined at the top of
-        # this block for later use
-        for chal_id, solve_count in solves_q:
-            solve_counts[chal_id] = solve_count
+        solve_counts = dict(solves_q)
         if scores_visible() and accounts_visible():
             solve_count_dfl = 0
         else:
@@ -238,9 +235,7 @@ class ChallengeList(Resource):
                 requirements = challenge.requirements.get("prerequisites", [])
                 anonymize = challenge.requirements.get("anonymize")
                 prereqs = set(requirements).intersection(all_challenge_ids)
-                if user_solves >= prereqs or admin_view:
-                    pass
-                else:
+                if user_solves < prereqs and not admin_view:
                     if anonymize:
                         response.append(
                             {
@@ -384,9 +379,7 @@ class Challenge(Resource):
                     solve_ids = []
                 solve_ids = {value for value, in solve_ids}
                 prereqs = set(requirements).intersection(all_challenge_ids)
-                if solve_ids >= prereqs or is_admin():
-                    pass
-                else:
+                if solve_ids < prereqs and not is_admin():
                     if anonymize:
                         return {
                             "success": True,
@@ -418,11 +411,8 @@ class Challenge(Resource):
             team = get_current_team()
 
             # TODO: Convert this into a re-useable decorator
-            if is_admin():
-                pass
-            else:
-                if config.is_teams_mode() and team is None:
-                    abort(403)
+            if not is_admin() and config.is_teams_mode() and team is None:
+                abort(403)
 
             unlocked_hints = {
                 u.target
@@ -456,9 +446,7 @@ class Challenge(Resource):
         solves_q, user_solves = _build_solves_query(
             extra_filters=(Solves.challenge_id == chal.id,)
         )
-        # If there are no solves for this challenge ID then we have 0 rows
-        maybe_row = solves_q.first()
-        if maybe_row:
+        if maybe_row := solves_q.first():
             challenge_id, solve_count = maybe_row
             solved_by_user = challenge_id in user_solves
         else:

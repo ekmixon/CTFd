@@ -20,11 +20,10 @@ class UserStatistics(Resource):
 class UserPropertyCounts(Resource):
     @admins_only
     def get(self, column):
-        if column in Users.__table__.columns.keys():
-            prop = getattr(Users, column)
-            data = (
-                Users.query.with_entities(prop, func.count(prop)).group_by(prop).all()
-            )
-            return {"success": True, "data": dict(data)}
-        else:
+        if column not in Users.__table__.columns.keys():
             return {"success": False, "message": "That could not be found"}, 404
+        prop = getattr(Users, column)
+        data = (
+            Users.query.with_entities(prop, func.count(prop)).group_by(prop).all()
+        )
+        return {"success": True, "data": dict(data)}

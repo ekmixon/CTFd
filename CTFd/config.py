@@ -10,10 +10,7 @@ class EnvInterpolation(configparser.BasicInterpolation):
     def before_get(self, parser, section, option, value, defaults):
         value = super().before_get(parser, section, option, value, defaults)
         envvar = os.getenv(option)
-        if value == "" and envvar:
-            return process_string_var(envvar)
-        else:
-            return value
+        return process_string_var(envvar) if value == "" and envvar else value
 
 
 def process_string_var(value):
@@ -38,16 +35,11 @@ def process_boolean_str(value):
     if value is None:
         return False
 
-    if value == "":
-        return None
-
-    return bool(strtobool(value))
+    return None if value == "" else bool(strtobool(value))
 
 
 def empty_str_cast(value, default=None):
-    if value == "":
-        return default
-    return value
+    return default if value == "" else value
 
 
 def gen_secret_key():

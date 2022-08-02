@@ -47,7 +47,7 @@ def export_ctf():
         result_file = BytesIO()
         freeze_export(result, fileobj=result_file)
         result_file.seek(0)
-        backup_zip.writestr("db/{}.json".format(table), result_file.read())
+        backup_zip.writestr(f"db/{table}.json", result_file.read())
 
     # # Guarantee that alembic_version is saved into the export
     if "alembic_version" not in tables:
@@ -94,9 +94,8 @@ def import_ctf(backup, erase=True):
             # Abort on malicious zip files
             raise zipfile.BadZipfile
         info = backup.getinfo(f)
-        if max_content_length:
-            if info.file_size > max_content_length:
-                raise zipfile.LargeZipFile
+        if max_content_length and info.file_size > max_content_length:
+            raise zipfile.LargeZipFile
 
     # Get list of directories in zipfile
     member_dirs = [os.path.split(m)[0] for m in members if "/" in m]

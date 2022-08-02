@@ -113,7 +113,6 @@ class FlagTypes(Resource):
         if type_name:
             flag_class = get_flag_class(type_name)
             response = {"name": flag_class.name, "templates": flag_class.templates}
-            return {"success": True, "data": response}
         else:
             response = {}
             for class_id in FLAG_CLASSES:
@@ -122,7 +121,8 @@ class FlagTypes(Resource):
                     "name": flag_class.name,
                     "templates": flag_class.templates,
                 }
-            return {"success": True, "data": response}
+
+        return {"success": True, "data": response}
 
 
 @flags_namespace.route("/<flag_id>")

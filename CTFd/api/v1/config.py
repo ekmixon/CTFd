@@ -158,12 +158,10 @@ class Config(Resource):
         data = request.get_json()
         if config:
             schema = ConfigSchema(instance=config, partial=True)
-            response = schema.load(data)
         else:
             schema = ConfigSchema()
             data["key"] = config_key
-            response = schema.load(data)
-
+        response = schema.load(data)
         if response.errors:
             return {"success": False, "errors": response.errors}, 400
 

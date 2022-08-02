@@ -82,9 +82,7 @@ class TopicList(Resource):
     )
     def post(self):
         req = request.get_json()
-        value = req.get("value")
-
-        if value:
+        if value := req.get("value"):
             topic = Topics.query.filter_by(value=value).first()
             if topic is None:
                 schema = TopicSchema()
@@ -102,12 +100,11 @@ class TopicList(Resource):
 
         req["topic_id"] = topic.id
         topic_type = req.get("type")
-        if topic_type == "challenge":
-            schema = ChallengeTopicSchema()
-            response = schema.load(req, session=db.session)
-        else:
+        if topic_type != "challenge":
             return {"success": False}, 400
 
+        schema = ChallengeTopicSchema()
+        response = schema.load(req, session=db.session)
         db.session.add(response.data)
         db.session.commit()
 

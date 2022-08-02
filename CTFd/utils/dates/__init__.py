@@ -10,33 +10,17 @@ def ctftime():
     start = get_config("start")
     end = get_config("end")
 
-    if start:
-        start = int(start)
-    else:
-        start = 0
-    if end:
-        end = int(end)
-    else:
-        end = 0
-
-    if start and end:
-        if start < time.time() < end:
-            # Within the two time bounds
-            return True
+    start = int(start) if start else 0
+    end = int(end) if end else 0
+    if start and end and start < time.time() < end:
+        # Within the two time bounds
+        return True
 
     if start < time.time() and end == 0:
         # CTF starts on a date but never ends
         return True
 
-    if start == 0 and time.time() < end:
-        # CTF started but ends at a date
-        return True
-
-    if start == 0 and end == 0:
-        # CTF has no time requirements
-        return True
-
-    return False
+    return True if start == 0 and time.time() < end else start == 0 and end == 0
 
 
 def ctf_paused():
@@ -70,4 +54,4 @@ def unix_time_to_utc(t):
 
 
 def isoformat(dt):
-    return dt.isoformat() + "Z"
+    return f"{dt.isoformat()}Z"

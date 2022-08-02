@@ -91,11 +91,10 @@ class RedisEventManager(EventManager):
                         message = pubsub.get_message(
                             ignore_subscribe_messages=True, timeout=5
                         )
-                        if message:
-                            if message["type"] == "message":
-                                event = json.loads(message["data"])
-                                for client in list(self.clients.values()):
-                                    client[channel].put(event)
+                        if message and message["type"] == "message":
+                            event = json.loads(message["data"])
+                            for client in list(self.clients.values()):
+                                client[channel].put(event)
                 finally:
                     pubsub.close()
 

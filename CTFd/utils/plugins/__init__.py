@@ -60,7 +60,7 @@ def get_configurable_plugins():
                 )
                 plugins.append(p)
         elif os.path.isfile(os.path.join(plugins_path, dir, "config.html")):
-            p = Plugin(name=dir, route="/admin/plugins/{}".format(dir))
+            p = Plugin(name=dir, route=f"/admin/plugins/{dir}")
             plugins.append(p)
 
     return plugins

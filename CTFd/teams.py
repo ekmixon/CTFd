@@ -30,7 +30,7 @@ def listing():
         field = "name"
 
     if q:
-        filters.append(getattr(Teams, field).like("%{}%".format(q)))
+        filters.append(getattr(Teams, field).like(f"%{q}%"))
 
     teams = (
         Teams.query.filter_by(hidden=False, banned=False)
@@ -133,8 +133,7 @@ def join():
         errors.append("You are already in a team. You cannot join another.")
 
     if request.method == "GET":
-        team_size_limit = get_config("team_size", default=0)
-        if team_size_limit:
+        if team_size_limit := get_config("team_size", default=0):
             plural = "" if team_size_limit == 1 else "s"
             infos.append(
                 "Teams are limited to {limit} member{plural}".format(
@@ -191,7 +190,7 @@ def new():
     infos = get_infos()
     errors = get_errors()
 
-    if bool(get_config("team_creation", default=True)) is False:
+    if not bool(get_config("team_creation", default=True)):
         abort(
             403,
             description="Team creation is currently disabled. Please join an existing team.",
@@ -210,8 +209,7 @@ def new():
         errors.append("You are already in a team. You cannot join another.")
 
     if request.method == "GET":
-        team_size_limit = get_config("team_size", default=0)
-        if team_size_limit:
+        if team_size_limit := get_config("team_size", default=0):
             plural = "" if team_size_limit == 1 else "s"
             infos.append(
                 "Teams are limited to {limit} member{plural}".format(
@@ -229,17 +227,13 @@ def new():
 
         user = get_current_user()
 
-        existing_team = Teams.query.filter_by(name=teamname).first()
-        if existing_team:
+        if existing_team := Teams.query.filter_by(name=teamname).first():
             errors.append("That team name is already taken")
         if not teamname:
             errors.append("That team name is invalid")
 
         # Process additional user fields
-        fields = {}
-        for field in TeamFields.query.all():
-            fields[field.id] = field
-
+        fields = {field.id: field for field in TeamFields.query.all()}
         entries = {}
         for field_id, field in fields.items():
             value = request.form.get(f"fields[{field_id}]", "").strip()
@@ -255,24 +249,12 @@ def new():
                 website = value
                 break
 
-            if field.field_type == "boolean":
-                entries[field_id] = bool(value)
-            else:
-                entries[field_id] = value
-
-        if website:
-            valid_website = validators.validate_url(website)
-        else:
-            valid_website = True
-
-        if affiliation:
-            valid_affiliation = len(affiliation) < 128
-        else:
-            valid_affiliation = True
-
+            entries[field_id] = bool(value) if field.field_type == "boolean" else value
+        valid_website = validators.validate_url(website) if website else True
+        valid_affiliation = len(affiliation) < 128 if affiliation else True
         if valid_website is False:
             errors.append("Websites must be a proper URL starting with http or https")
-        if valid_affiliation is False:
+        if not valid_affiliation:
             errors.append("Please provide a shorter affiliation")
 
         if errors:

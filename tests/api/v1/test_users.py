@@ -535,7 +535,7 @@ def test_api_user_change_verify_email():
             assert resp["data"]["email"] == "new_email@email.com"
             assert resp["success"] is True
             user = Users.query.filter_by(id=2).first()
-            assert user.verified is False
+            assert not user.verified
     destroy_ctfd(app)
 
 

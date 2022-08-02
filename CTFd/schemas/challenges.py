@@ -12,11 +12,11 @@ class ChallengeRequirementsValidator(validate.Validator):
         self.error = error or self.default_message
 
     def __call__(self, value):
-        if isinstance(value, dict) is False:
+        if not isinstance(value, dict):
             raise ValidationError(self.default_message)
 
         prereqs = value.get("prerequisites", [])
-        if all(prereqs) is False:
+        if not all(prereqs):
             raise ValidationError(
                 "Challenge requirements cannot have a null prerequisite"
             )

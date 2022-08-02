@@ -158,6 +158,9 @@ class UserBaseForm(BaseForm):
 
 
 def UserEditForm(*args, **kwargs):
+
+
+
     class _UserEditForm(UserBaseForm):
         pass
 
@@ -175,9 +178,9 @@ def UserEditForm(*args, **kwargs):
             Custom init to persist the obj parameter to the rest of the form
             """
             super().__init__(*args, **kwargs)
-            obj = kwargs.get("obj")
-            if obj:
+            if obj := kwargs.get("obj"):
                 self.obj = obj
+
 
     attach_custom_user_fields(_UserEditForm)
 

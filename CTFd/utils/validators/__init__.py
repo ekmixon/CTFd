@@ -27,9 +27,8 @@ def validate_email(email):
 
 def unique_email(email, model=Users):
     obj = model.query.filter_by(email=email).first()
-    if is_admin():
-        if obj:
-            raise ValidationError("Email address has already been used")
+    if is_admin() and obj:
+        raise ValidationError("Email address has already been used")
     if obj and obj.id != get_current_user().id:
         raise ValidationError("Email address has already been used")
 
